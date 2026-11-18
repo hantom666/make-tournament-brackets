@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS2 Bracket — Турниры</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050505;
+    --bg-soft: #0a0a0a;
+    --bg-elevated: #101010;
+    --card: rgba(22, 22, 22, 0.55);
+    --card-hi: rgba(30, 30, 30, 0.72);
+    --fg: #ffffff;
+    --fg-muted: #9a9a9a;
+    --fg-dim: #555555;
+    --border: rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.16);
+    --border-active: rgba(255,255,255,0.32);
+    --danger: #ff6b6b;
+    --danger-dim: rgba(255,107,107,0.12);
+    --twitch: #9146ff;
+    --telegram: #229ED9;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+    --display: 'Space Grotesk', 'Inter', sans-serif;
+    --glass-blur: 24px;
+    --glass-sat: 180%;
+    --glass-border: rgba(255,255,255,0.1);
+    --spotlight-x: 50%;
+    --spotlight-y: 50%;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    position: relative;
+    letter-spacing: -0.005em;
+  }
+  body.intro-active { overflow: hidden; }
+
+  .liquid-filter-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+  /* ================= INTRO SCREEN — теперь полупрозрачное стекло ================= */
+  .intro-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(5, 5, 5, 0.42);
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+    display: grid;
+    place-items: center;
+    padding: 40px 28px;
+    overflow: hidden;
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.9s;
+    isolation: isolate;
+  }
+  /* Виньетка за текстом — чтобы надпись читалась поверх flux */
+  .intro-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 75% 65% at 50% 48%, rgba(5,5,5,0.88) 0%, rgba(5,5,5,0.45) 55%, transparent 80%),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02), transparent 40%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .intro-screen::after {
+    content: '';
+    position: absolute;
+    inset: 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .intro-screen.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .intro-screen.is-hidden .intro-content > * {
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+  }
+
+  .intro-content {
+    text-align: center;
+    max-width: 100%;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .intro-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-bottom: clamp(20px, 4vh, 48px);
+    opacity: 0;
+    animation: introFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  }
+  .intro-eyebrow::before,
+  .intro-eyebrow::after {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--fg-dim);
+  }
+
+  .intro-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.75rem, 10.5vw, 12rem);
+    line-height: 0.88;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+    margin: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.02em;
+  }
+  .intro-line {
+    display: block;
+    white-space: nowrap;
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 45%, #707070 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: introLineIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    filter: drop-shadow(0 0 40px rgba(0,0,0,0.8));
+  }
+  .intro-line:nth-child(1) { animation-delay: 0.5s; }
+  .intro-line:nth-child(2) {
+    animation-delay: 0.75s;
+    background: linear-gradient(180deg, #a0a0a0 0%, #5a5a5a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .intro-line::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.65) 50%, transparent 70%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: introShimmer 5s ease-in-out 2s infinite;
+    pointer-events: none;
+  }
+  @keyframes introShimmer {
+    0%, 100% { background-position: 200% center; }
+    50% { background-position: -100% center; }
+  }
+  @keyframes introLineIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes introFadeUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .intro-divider {
+    width: clamp(60px, 8vw, 120px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--fg-dim) 50%, transparent);
+    margin: clamp(28px, 5vh, 56px) 0 clamp(24px, 4vh, 44px);
+    opacity: 0;
+    animation: introFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.1s forwards;
+  }
+
+  /* Контейнер для двух соц-ссылок */
+  .intro-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: introFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards;
+  }
+
+  /* TWITCH */
+  .intro-twitch {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px 10px 14px;
+    border-radius: 100px;
+    text-decoration: none;
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .intro-twitch:hover {
+    background: rgba(145,70,255,0.1);
+    border-color: rgba(145,70,255,0.4);
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(145,70,255,0.15),
+      0 8px 32px rgba(145,70,255,0.22),
+      0 2px 8px rgba(0,0,0,0.4);
+  }
+  .intro-twitch::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--twitch);
+    box-shadow: 0 0 10px rgba(145,70,255,0.9);
+    animation: introLivePulse 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes introLivePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+  }
+  .intro-twitch-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--fg-muted);
+    flex-shrink: 0;
+    transition: color 0.3s, filter 0.3s;
+  }
+  .intro-twitch:hover .intro-twitch-icon {
+    color: var(--twitch);
+    filter: drop-shadow(0 0 8px rgba(145,70,255,0.6));
+  }
+  .intro-twitch-text { line-height: 1; }
+
+  /* TELEGRAM */
+  .intro-telegram {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px 10px 14px;
+    border-radius: 100px;
+    text-decoration: none;
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .intro-telegram:hover {
+    background: rgba(34,158,217,0.1);
+    border-color: rgba(34,158,217,0.45);
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(34,158,217,0.15),
+      0 8px 32px rgba(34,158,217,0.25),
+      0 2px 8px rgba(0,0,0,0.4);
+  }
+  .intro-telegram::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--telegram);
+    box-shadow: 0 0 10px rgba(34,158,217,0.9);
+    animation: introLivePulse 1.6s ease-in-out infinite;
+    animation-delay: 0.3s;
+    flex-shrink: 0;
+  }
+  .intro-telegram-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--fg-muted);
+    flex-shrink: 0;
+    transition: color 0.3s, filter 0.3s;
+  }
+  .intro-telegram:hover .intro-telegram-icon {
+    color: var(--telegram);
+    filter: drop-shadow(0 0 8px rgba(34,158,217,0.6));
+  }
+  .intro-telegram-text { line-height: 1; }
+
+  /* ENTER BUTTON */
+  .intro-enter {
+    margin-top: clamp(28px, 5vh, 52px);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #0a0a0a;
+    background: #ffffff;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: introFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
+    transition: transform 0.25s ease, box-shadow 0.3s ease, background 0.25s;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.15),
+      0 6px 24px rgba(0,0,0,0.6),
+      0 0 60px rgba(255,255,255,0.08);
+  }
+  .intro-enter::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+    animation: introEnterShimmer 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes introEnterShimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+  .intro-enter:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.4),
+      0 12px 40px rgba(0,0,0,0.7),
+      0 0 100px rgba(255,255,255,0.15);
+    background: #ffffff;
+  }
+  .intro-enter:active {
+    transform: translateY(1px) scale(0.99);
+  }
+  .intro-enter span {
+    position: relative;
+    z-index: 1;
+  }
+  .intro-enter svg {
+    width: 14px;
+    height: 14px;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s;
+  }
+  .intro-enter:hover svg {
+    transform: translateX(4px);
+  }
+
+  .intro-hint {
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    opacity: 0;
+    animation: introFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+  }
+  .intro-hint kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 9px;
+    color: var(--fg-muted);
+    margin: 0 3px;
+  }
+
+  .intro-corner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: rgba(255,255,255,0.25);
+    border-style: solid;
+    pointer-events: none;
+    opacity: 0;
+    animation: introFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+  }
+  .intro-corner.tl { top: 44px; left: 44px; border-width: 1px 0 0 1px; }
+  .intro-corner.tr { top: 44px; right: 44px; border-width: 1px 1px 0 0; }
+  .intro-corner.bl { bottom: 44px; left: 44px; border-width: 0 0 1px 1px; }
+  .intro-corner.br { bottom: 44px; right: 44px; border-width: 0 1px 1px 0; }
+
+  /* ================= NOISE GRAIN ================= */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* ================= LIQUID BG ================= */
+  .liquid-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    background: #050505;
+  }
+  .liquid-bg::before,
+  .liquid-bg::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.4;
+    will-change: transform;
+  }
+  .liquid-bg::before {
+    width: 70vw; height: 70vw;
+    background: radial-gradient(circle, rgba(90,90,90,0.5) 0%, transparent 70%);
+    top: -25%; left: -15%;
+    animation: blob1 20s ease-in-out infinite alternate;
+  }
+  .liquid-bg::after {
+    width: 60vw; height: 60vw;
+    background: radial-gradient(circle, rgba(60,60,60,0.6) 0%, transparent 70%);
+    bottom: -20%; right: -15%;
+    animation: blob2 24s ease-in-out infinite alternate;
+  }
+  @keyframes blob1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(12%,18%) scale(1.2); } }
+  @keyframes blob2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-14%,-12%) scale(1.15); } }
+
+  /* ================= FLUX LINES ================= */
+  .flux-lines-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 40%, black 30%, transparent 95%);
+    mask-image: radial-gradient(ellipse 90% 90% at 50% 40%, black 30%, transparent 95%);
+    animation: flux-fade-in 2.5s ease 0.3s backwards;
+    transition: opacity 0.8s ease;
+  }
+  @keyframes flux-fade-in { from { opacity: 0; } to { opacity: 0.5; } }
+  .flux-lines-bg canvas { display: block; width: 100%; height: 100%; }
+
+  /* Пока интро открыто — flux виден по ВСЕМУ экрану, ярче и без маски */
+  body.intro-active .flux-lines-bg {
+    opacity: 0.95;
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: none;
+  }
+
+  /* ================= METEORS ================= */
+  .meteors-container { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .meteor {
+    position: absolute;
+    width: 1.5px; height: 1.5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 8px 1px rgba(255,255,255,0.3);
+    animation: meteor linear infinite;
+  }
+  .meteor::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 100%;
+    width: 90px; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.7), transparent);
+    transform: translateY(-50%);
+    opacity: 0.4;
+  }
+  @keyframes meteor {
+    0% { transform: rotate(var(--angle)) translateX(0); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: rotate(var(--angle)) translateX(-500px); opacity: 0; }
+  }
+
+  main { position: relative; z-index: 1; }
+  header { position: relative; z-index: 2; }
+
+  /* ================= HEADER ================= */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(8,8,8,0.55);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    position: sticky;
+    top: 0; z-index: 100;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--display);
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .brand .mark {
+    width: 10px; height: 10px;
+    background: #ffffff;
+    box-shadow: 0 0 16px rgba(255,255,255,0.5), 0 0 4px rgba(255,255,255,0.9);
+    animation: mark-pulse 3s ease-in-out infinite;
+    border-radius: 2px;
+  }
+  @keyframes mark-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(255,255,255,0.35), 0 0 3px rgba(255,255,255,0.9); }
+    50% { box-shadow: 0 0 20px rgba(255,255,255,0.65), 0 0 6px rgba(255,255,255,1); }
+  }
+
+  .twitch-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 15px 8px 11px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    color: var(--fg-muted);
+    font-size: 11px; font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s, box-shadow 0.3s;
+  }
+  .twitch-badge:hover {
+    background: rgba(145,70,255,0.08);
+    border-color: rgba(145,70,255,0.35);
+    color: var(--fg);
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(145,70,255,0.15), 0 6px 24px rgba(145,70,255,0.18);
+  }
+  .twitch-icon {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    color: var(--fg-muted);
+    transition: color 0.25s, filter 0.25s;
+  }
+  .twitch-badge:hover .twitch-icon {
+    color: var(--twitch);
+    filter: drop-shadow(0 0 8px rgba(145,70,255,0.6));
+  }
+  .twitch-text { line-height: 1; letter-spacing: 0.01em; }
+  .twitch-text strong { color: var(--fg); font-weight: 600; margin-left: 2px; transition: color 0.25s; }
+  .twitch-badge:hover .twitch-text strong { color: #ffffff; text-shadow: 0 0 12px rgba(145,70,255,0.4); }
+  .twitch-badge::before {
+    content: '';
+    position: absolute;
+    top: 6px; right: 8px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--twitch);
+    box-shadow: 0 0 8px rgba(145,70,255,0.8);
+    opacity: 0; transform: scale(0);
+    transition: all 0.3s ease;
+  }
+  .twitch-badge:hover::before {
+    opacity: 1; transform: scale(1);
+    animation: twitch-dot-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes twitch-dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hdr-stats {
+    display: flex; gap: 24px;
+    margin-left: auto;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--fg-muted); white-space: nowrap;
+  }
+  .hdr-stats .val { color: var(--fg); font-weight: 600; }
+  .hdr-stats .val .sep { color: var(--fg-dim); font-weight: 400; margin: 0 1px; }
+  .hdr-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ================= LIQUID METAL BUTTON ================= */
+  .shimmer-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5px;
+    background: linear-gradient(180deg, #050505 0%, #b8b8b8 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+    transform: translateY(0) scale(1);
+    transition: transform 250ms cubic-bezier(0.1, 0.4, 0.2, 1), box-shadow 250ms cubic-bezier(0.1, 0.4, 0.2, 1);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 3px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3), 0 0 24px rgba(255,255,255,0.06);
+  }
+  .shimmer-btn::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 7px;
+    background: linear-gradient(180deg, #ffffff 0%, #4a4a4a 48%, #d0d0d0 100%);
+    z-index: 0;
+    transition: filter 250ms;
+    pointer-events: none;
+  }
+  .shimmer-btn::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #e0e0e0 0%, #c0c0c0 45%, #a0a0a0 100%);
+    z-index: 1;
+    transition: filter 250ms, transform 250ms;
+    pointer-events: none;
+  }
+  .shimmer-btn .shimmer-text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-family: var(--display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #161616;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.55);
+    transition: color 250ms;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .shimmer-btn .shimmer-text::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+    animation: shimmer-sweep 3.5s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes shimmer-sweep { 0%, 100% { left: -150%; } 50% { left: 150%; } }
+  .shimmer-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 5px 12px rgba(0,0,0,0.5), 0 12px 32px rgba(0,0,0,0.4), 0 0 40px rgba(255,255,255,0.12);
+  }
+  .shimmer-btn:hover:not(:disabled)::before { filter: brightness(1.05); }
+  .shimmer-btn:hover:not(:disabled)::after { filter: brightness(1.08); transform: translateY(-0.5px); }
+  .shimmer-btn:active:not(:disabled) {
+    transform: translateY(2px) scale(0.99);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .shimmer-btn:active:not(:disabled)::after { filter: brightness(0.9); transform: translateY(0.5px); }
+  .shimmer-btn:disabled {
+    background: linear-gradient(180deg, #0a0a0a 0%, #2a2a2a 100%);
+    cursor: not-allowed;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03);
+    transform: translateY(0) scale(1);
+  }
+  .shimmer-btn:disabled::before { background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 48%, #333333 100%); }
+  .shimmer-btn:disabled::after { background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #222222 100%); }
+  .shimmer-btn:disabled .shimmer-text { color: rgba(255,255,255,0.28); text-shadow: none; }
+  .shimmer-btn:disabled .shimmer-text::after { display: none; }
+  .shimmer-btn-cta { display: flex; width: 100%; }
+  .shimmer-btn-cta .shimmer-text { flex: 1; padding: 13px 22px; font-size: 11px; letter-spacing: 0.2em; }
+
+  .shimmer-btn:focus-visible,
+  .btn-sm:focus-visible,
+  .btn-toggle:focus-visible,
+  .seg-btn:focus-visible,
+  .twitch-badge:focus-visible,
+  .intro-twitch:focus-visible,
+  .intro-telegram:focus-visible,
+  .intro-enter:focus-visible,
+  .check input:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.7);
+    outline-offset: 3px;
+  }
+
+  .btn-toggle {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    font-family: var(--display);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--fg); cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn-toggle:hover { background: rgba(255,255,255,0.08); border-color: var(--border-hi); }
+  .btn-toggle .chev {
+    font-size: 10px;
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    color: var(--fg-muted);
+  }
+  .btn-toggle.open .chev { transform: rotate(180deg); }
+
+  .controls {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--glass-border);
+    background: transparent;
+    max-height: 800px; opacity: 1; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.25s ease, border 0.3s;
+    position: relative; z-index: 1;
+  }
+  .controls.collapsed { max-height: 0; opacity: 0; border-bottom: none; }
+
+  .control-section {
+    padding: 26px 24px;
+    border-right: 1px solid var(--glass-border);
+    min-width: 0; display: flex; flex-direction: column; gap: 14px;
+    position: relative;
+    background: rgba(10,10,10,0.3);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    transition: background 0.3s;
+  }
+  .control-section:last-child { border-right: none; }
+  .control-section:hover { background: rgba(14,14,14,0.4); }
+  .control-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 60%);
+    pointer-events: none;
+  }
+
+  .sec-title {
+    font-family: var(--display);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--fg-muted);
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .sec-title .num {
+    font-family: var(--mono);
+    font-size: 10px; color: var(--fg-dim); font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .lbl {
+    display: block;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-bottom: 8px;
+  }
+
+  input[type=text] {
+    width: 100%;
+    background: rgba(5,5,5,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--fg);
+    font-family: inherit; font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    letter-spacing: -0.01em;
+    border-radius: 2px;
+  }
+  input[type=text]:hover:not(:disabled):not(:focus) { border-color: var(--border-hi); background: rgba(10,10,10,0.7); }
+  input[type=text]:focus {
+    border-color: var(--border-active);
+    background: rgba(12,12,12,0.8);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.06), inset 0 0 20px rgba(255,255,255,0.02);
+  }
+  input[type=text]::placeholder { color: var(--fg-dim); }
+  input[type=text]:disabled { opacity: 0.4; cursor: not-allowed; background: rgba(5,5,5,0.4); backdrop-filter: none; }
+
+  .input-row { display: flex; gap: 6px; }
+  .input-row input { flex: 1; min-width: 0; }
+
+  button { font-family: inherit; cursor: pointer; transition: all 0.25s ease; }
+
+  .btn-sm {
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    font-family: var(--display);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fg); white-space: nowrap;
+    border-radius: 2px;
+  }
+  .btn-sm:hover:not(:disabled) { background: rgba(255,255,255,0.09); border-color: var(--border-hi); }
+  .btn-sm:active:not(:disabled) { background: rgba(255,255,255,0.14); transform: scale(0.98); }
+  .btn-sm:disabled { opacity: 0.3; cursor: not-allowed; backdrop-filter: none; }
+  .btn-sm.danger { border-color: rgba(255,107,107,0.25); color: var(--danger); }
+  .btn-sm.danger:hover:not(:disabled) { background: var(--danger-dim); border-color: rgba(255,107,107,0.5); color: #ff8a8a; }
+
+  .format-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .max-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .seg-btn {
+    padding: 9px 4px;
+    border: 1px solid var(--glass-border);
+    background: rgba(5,5,5,0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-family: var(--mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .seg-btn:hover:not(:disabled):not(.active) { border-color: var(--border-hi); color: var(--fg); background: rgba(255,255,255,0.05); }
+  .seg-btn.active {
+    background: #fff; color: #0a0a0a; border-color: #fff;
+    font-weight: 700; backdrop-filter: none;
+    box-shadow: 0 0 20px rgba(255,255,255,0.15);
+  }
+
+  .info-mini {
+    display: flex; gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 11px; letter-spacing: 0.04em;
+  }
+  .info-mini > div { flex: 1; min-width: 0; }
+  .info-mini .il {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--fg-muted); font-weight: 600;
+    margin-bottom: 4px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .info-mini .iv {
+    font-size: 18px; font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -0.03em; white-space: nowrap;
+    display: inline-block; color: var(--fg);
+    transition: color 0.2s;
+    font-variant-numeric: tabular-nums;
+  }
+  .info-mini .iv.pulse { animation: number-pop 0.45s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes number-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+    100% { transform: scale(1); }
+  }
+  .info-mini .iv small { font-size: 10px; color: var(--fg-dim); font-weight: 400; font-family: var(--mono); margin-left: 2px; letter-spacing: 0; }
+
+  .leftover-hint { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.01em; padding: 4px 0; line-height: 1.5; }
+  .leftover-hint b { color: var(--fg); font-weight: 600; }
+
+  .check { display: inline-flex; align-items: center; gap: 9px; font-size: 12px; color: var(--fg-muted); cursor: pointer; user-select: none; transition: color 0.15s; }
+  .check:hover { color: var(--fg); }
+  .check input {
+    appearance: none;
+    width: 15px; height: 15px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    cursor: pointer; position: relative; margin: 0; flex: none;
+    transition: all 0.2s; border-radius: 3px;
+  }
+  .check input:hover { border-color: var(--border-hi); background: rgba(255,255,255,0.06); }
+  .check input:checked { background: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.9); box-shadow: 0 0 12px rgba(255,255,255,0.2); }
+  .check input:checked::after {
+    content: ''; position: absolute;
+    left: 3.5px; top: 0;
+    width: 4px; height: 8px;
+    border: solid #0a0a0a; border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .pool-hint { font-size: 11px; color: var(--fg-dim); letter-spacing: 0.02em; padding: 4px 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pool-hint .counter { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+  .pool-hint .counter .c-max { color: var(--fg-dim); }
+  .pool-hint .counter.full { color: var(--fg); }
+
+  .pool-list {
+    border: 1px solid var(--glass-border);
+    background: rgba(5,5,5,0.45);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    max-height: 180px; min-height: 78px;
+    overflow-y: auto; font-size: 12px;
+    border-radius: 2px;
+  }
+  .pool-list::-webkit-scrollbar { width: 6px; }
+  .pool-list::-webkit-scrollbar-track { background: transparent; }
+  .pool-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  .pool-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  .pool-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--glass-border);
+    transition: background 0.2s;
+    animation: poolIn 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes poolIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .pool-item:last-child { border-bottom: none; }
+  .pool-item:hover { background: rgba(255,255,255,0.05); }
+  .pool-item .idx { font-family: var(--mono); font-size: 10px; color: var(--fg-dim); width: 22px; font-weight: 600; flex: none; font-variant-numeric: tabular-nums; }
+  .pool-item .pn { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+  .pool-item .rm {
+    width: 22px; height: 22px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    color: var(--fg-muted); font-size: 13px; line-height: 1;
+    display: grid; place-items: center;
+    padding: 0; cursor: pointer; flex: none;
+    opacity: 0; transition: all 0.2s; border-radius: 3px;
+  }
+  .pool-item:hover .rm { opacity: 1; }
+  .pool-item .rm:hover { background: rgba(255,255,255,0.9); color: #0a0a0a; border-color: rgba(255,255,255,0.9); }
+  .pool-empty { color: var(--fg-dim); font-style: italic; font-size: 12px; text-align: center; padding: 28px 8px; }
+
+  .pool-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .manual-add { display: flex; gap: 6px; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .manual-add input { font-size: 12px; padding: 8px 10px; }
+  .manual-add .btn-sm { padding: 8px 14px; font-size: 13px; letter-spacing: 0; }
+
+  .status-line {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(5,5,5,0.5);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    font-size: 11px; letter-spacing: 0.02em;
+    color: var(--fg-muted);
+    transition: all 0.25s;
+    border-radius: 2px;
+  }
+  .status-line .led { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); flex: none; transition: all 0.3s; }
+  .status-line.connected { border-color: var(--border-hi); color: var(--fg); background: rgba(20,20,20,0.6); }
+  .status-line.connected .led { background: #fff; animation: pulse-led 1.6s infinite; box-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 3px #fff; }
+  .status-line.error { border-color: rgba(255,107,107,0.35); color: var(--danger); }
+  .status-line.error .led { background: var(--danger); }
+  @keyframes pulse-led { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
+  .found-list {
+    border: 1px solid var(--glass-border);
+    background: rgba(5,5,5,0.45);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    min-height: 78px; max-height: 130px;
+    overflow-y: auto; padding: 10px;
+    display: flex; flex-wrap: wrap; gap: 5px;
+    align-content: flex-start;
+    border-radius: 2px;
+  }
+  .found-list::-webkit-scrollbar { width: 6px; }
+  .found-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  .found-list .tag {
+    display: inline-flex; align-items: center;
+    padding: 4px 9px;
+    border: 1px solid var(--glass-border);
+    font-size: 11px; font-family: var(--mono); font-weight: 500;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color: var(--fg);
+    animation: tagIn 0.35s cubic-bezier(0.16,1,0.3,1) backwards;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: all 0.2s; border-radius: 2px;
+  }
+  @keyframes tagIn { from { opacity: 0; transform: translateY(-4px) scale(0.92); } to { opacity: 1; transform: none; } }
+  .found-list .tag.applied { background: rgba(255,255,255,0.9); color: #0a0a0a; border-color: rgba(255,255,255,0.9); }
+  .found-list .tag.applied::before { content: '✓'; opacity: 0.7; margin-right: 4px; font-weight: 700; }
+  .found-list .empty { color: var(--fg-dim); font-style: italic; font-size: 11px; padding: 16px 4px; width: 100%; text-align: center; }
+  .found-list .full-warn { color: var(--fg-muted); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 6px 0 0; width: 100%; text-align: center; border-top: 1px dashed var(--glass-border); margin-top: 4px; }
+
+  main { padding: 0; }
+
+  .empty-state { max-width: 540px; margin: 120px auto 80px; text-align: center; padding: 0 32px; animation: fadeIn 0.6s ease; }
+  .empty-state .ico {
+    width: 88px; height: 88px;
+    border: 1px solid var(--glass-border);
+    margin: 0 auto 28px;
+    display: grid; place-items: center;
+    font-size: 34px; color: var(--fg-muted);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 40px rgba(255,255,255,0.04), inset 0 0 30px rgba(255,255,255,0.02);
+  }
+  .empty-state .ico::before {
+    content: ''; position: absolute; inset: -8px;
+    border-radius: 50%; border: 1px solid var(--glass-border);
+    opacity: 0.5; animation: ring-rotate 20s linear infinite;
+  }
+  @keyframes ring-rotate { to { transform: rotate(360deg); } }
+  .empty-state h2 {
+    font-family: var(--display);
+    font-size: 26px; font-weight: 700; letter-spacing: 0.02em;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #fff, #929292);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .empty-state p { font-size: 14px; color: var(--fg-muted); margin-bottom: 24px; line-height: 1.6; }
+
+  #bracketView { padding: 20px 28px 28px; }
+  .toolbar { display: flex; align-items: center; gap: 20px; padding-bottom: 16px; margin-bottom: 4px; flex-wrap: wrap; }
+  .toolbar h2 { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: 0.01em; margin: 0; cursor: default; line-height: 1.2; }
+  .gradient-text {
+    background: linear-gradient(90deg, #fff 0%, #929292 50%, #fff 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 8s ease infinite;
+  }
+  @keyframes gradient-shift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .toolbar .meta { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-muted); }
+  .toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+  .bracket-hint { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.01em; padding: 0 0 18px; line-height: 1.6; }
+
+  .tournament-layout { display: flex; gap: 16px; align-items: stretch; }
+
+  .bracket-scroll {
+    flex: 1; min-width: 0;
+    border: 1px solid var(--glass-border);
+    overflow: auto;
+    padding: 48px 44px 48px 64px;
+    max-height: calc(100vh - 220px);
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.02), transparent 40%), rgba(5,5,5,0.5);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    position: relative; border-radius: 2px;
+  }
+  .bracket-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+  .bracket-scroll::-webkit-scrollbar-track { background: transparent; }
+  .bracket-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+  .bracket-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+  .bracket { display: flex; gap: 80px; width: max-content; align-items: stretch; position: relative; }
+  .lines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .lines path { stroke: rgba(255,255,255,0.12) !important; stroke-width: 1 !important; }
+
+  .round { display: flex; flex-direction: column; min-width: 260px; position: relative; z-index: 1; }
+  .round-title {
+    font-family: var(--display);
+    font-size: 9px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--fg-muted); text-align: center;
+    padding-bottom: 24px; white-space: nowrap;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .round-title .count {
+    font-family: var(--mono);
+    font-size: 9px; color: var(--fg-dim); font-weight: 500; letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border: 1px solid var(--glass-border);
+    text-transform: none;
+    background: rgba(255,255,255,0.02);
+    border-radius: 2px;
+  }
+  .round-body { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 14px; }
+
+  .match {
+    position: relative;
+    background: var(--card);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    transition: border-color 0.3s ease, box-shadow 0.35s ease, background 0.3s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1);
+    border-radius: 2px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+    transform-style: preserve-3d;
+  }
+  .match::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit; pointer-events: none;
+    background: radial-gradient(circle at var(--spotlight-x) var(--spotlight-y), rgba(255,255,255,0.08), transparent 50%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .match:hover {
+    border-color: var(--border-hi);
+    background: var(--card-hi);
+    transform: translateY(-2px) rotate3d(1,1,0,1.5deg);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 16px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .match:hover::after { opacity: 1; }
+  .match.entering { animation: matchIn 0.6s cubic-bezier(0.16,1,0.3,1) backwards; }
+  @keyframes matchIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+  .match-label { position: absolute; top: 4px; right: 8px; font-family: var(--mono); font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.15); letter-spacing: 0.08em; pointer-events: none; line-height: 1; z-index: 2; transition: color 0.2s; }
+  .match:hover .match-label { color: rgba(255,255,255,0.35); }
+
+  .round:first-child .match::after { content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%); width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.15); pointer-events: none; transition: all 0.3s; }
+  .round:first-child .match:hover::after { background: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.7), 0 0 4px #fff; transform: translateY(-50%) scale(1.3); }
+  .round:first-child .match { margin: 6px 0; }
+
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 16px; min-height: 52px;
+    position: relative;
+    transition: background 0.35s ease, color 0.35s ease;
+  }
+  .row + .row { border-top: 1px solid var(--glass-border); }
+
+  .row .name { flex: 1; font-size: 14px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--fg); min-width: 0; transition: color 0.35s ease; }
+  .row.empty .name, .row.bye .name { color: var(--fg-dim); font-weight: 400; font-style: italic; }
+
+  .row .name.multi { display: flex; flex-direction: column; gap: 2px; white-space: normal; font-size: 12.5px; line-height: 1.4; padding: 4px 0; }
+  .row .name.multi .member { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+
+  .row.clickable { cursor: pointer; }
+  .row.clickable:not(.win):hover { background: rgba(255,255,255,0.04); }
+  .row.clickable:not(.win):active { background: rgba(255,255,255,0.08); }
+
+  .row.win { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #0a0a0a; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); }
+  .row.win .name, .row.win .name.multi .member { color: #0a0a0a; font-weight: 600; }
+
+  .row .arrow { font-size: 13px; color: var(--fg-dim); opacity: 0; transition: opacity 0.2s, transform 0.25s, color 0.2s; transform: translateX(-4px); flex: none; width: 14px; text-align: center; }
+  .row.clickable:hover .arrow { opacity: 1; transform: translateX(0); color: var(--fg); }
+  .row.win .arrow { opacity: 0.6; transform: translateX(0); color: #0a0a0a; }
+  .row.win.clickable:hover .arrow { opacity: 1; }
+
+  .row .edit-btn {
+    width: 22px; height: 22px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--fg-muted); font-size: 12px; line-height: 1;
+    padding: 0; cursor: pointer; flex: none;
+    display: grid; place-items: center;
+    opacity: 0; transform: translateX(-4px);
+    transition: opacity 0.2s, transform 0.2s, color 0.2s, background 0.2s, border-color 0.2s;
+    pointer-events: none; align-self: center; border-radius: 3px;
+  }
+  .row:hover .edit-btn { opacity: 1; transform: none; pointer-events: auto; }
+  .row .edit-btn:hover { color: var(--fg); background: rgba(255,255,255,0.08); border-color: var(--glass-border); }
+  .row.win .edit-btn { color: rgba(0,0,0,0.35); }
+  .row.win .edit-btn:hover { color: #0a0a0a; background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); }
+  @media (hover: none) {
+    .row .edit-btn { opacity: 0.55; transform: none; pointer-events: auto; }
+    .row.win .edit-btn { color: rgba(0,0,0,0.5); }
+  }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: grid; place-items: center;
+    padding: 20px;
+    animation: modalFadeIn 0.3s ease;
+  }
+  .modal-overlay[hidden] { display: none; }
+  @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: rgba(14,14,14,0.75);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid var(--glass-border);
+    width: min(440px, 100%);
+    padding: 28px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.08);
+    animation: modalSlideIn 0.35s cubic-bezier(0.16,1,0.3,1);
+    border-radius: 3px;
+  }
+  @keyframes modalSlideIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+  .modal-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; color: var(--fg); }
+  .modal-sub { font-size: 12px; color: var(--fg-muted); margin-bottom: 20px; line-height: 1.6; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+  .modal-sub b { color: var(--fg); font-weight: 600; word-break: break-word; line-height: 1.4; }
+
+  .modal-members { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .modal-members input {
+    width: 100%;
+    background: rgba(5,5,5,0.7);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--fg); font-family: inherit; font-size: 13px;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    border-radius: 2px;
+  }
+  .modal-members input:hover { border-color: var(--border-hi); }
+  .modal-members input:focus { border-color: var(--border-active); background: rgba(10,10,10,0.8); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+
+  .modal-error { min-height: 18px; font-size: 11px; color: var(--danger); margin-bottom: 16px; letter-spacing: 0.01em; line-height: 1.5; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .modal-actions .btn-sm:last-child { background: rgba(255,255,255,0.9); color: #0a0a0a; border-color: rgba(255,255,255,0.9); font-weight: 700; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+  .modal-actions .btn-sm:last-child:hover:not(:disabled) { background: #fff; border-color: #fff; color: #0a0a0a; }
+
+  .champ-col { min-width: 250px; }
+  .champion {
+    border: 1px solid var(--glass-border);
+    padding: 40px 22px;
+    text-align: center;
+    transition: all 0.45s cubic-bezier(0.16,1,0.3,1);
+    position: relative; overflow: hidden;
+    background: rgba(16,16,16,0.5);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .champion .label { font-family: var(--display); font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 20px; position: relative; z-index: 1; }
+  .champion .name { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: 0.01em; color: var(--fg-dim); word-break: break-word; position: relative; z-index: 1; line-height: 1.3; }
+  .champion.has-champ {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border-color: rgba(255,255,255,0.9);
+    box-shadow: 0 0 100px rgba(255,255,255,0.2), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
+    animation: champion-glow 3s ease-in-out infinite alternate;
+  }
+  @supports (backdrop-filter: url(#liquid-lens)) {
+    .champion.has-champ {
+      backdrop-filter: url(#liquid-lens) blur(40px) saturate(200%);
+      -webkit-backdrop-filter: url(#liquid-lens) blur(40px) saturate(200%);
+    }
+  }
+  @keyframes champion-glow {
+    0% { box-shadow: 0 0 80px rgba(255,255,255,0.15), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5); }
+    100% { box-shadow: 0 0 120px rgba(255,255,255,0.35), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7); }
+  }
+  .champion.has-champ .label { color: rgba(0,0,0,0.45); }
+  .champion.has-champ .name { color: #0a0a0a; -webkit-text-fill-color: #0a0a0a; }
+  .champion .name.multi { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .champion .name.multi .member { color: #0a0a0a; -webkit-text-fill-color: #0a0a0a; word-break: break-word; }
+
+  .feed {
+    width: 300px; flex: none;
+    border: 1px solid var(--glass-border);
+    padding: 16px;
+    max-height: calc(100vh - 220px);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: rgba(12,12,12,0.55);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .feed-title { font-family: var(--display); font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-muted); padding-bottom: 14px; border-bottom: 1px solid var(--glass-border); flex: none; }
+  .feed-items { flex: 1; overflow-y: auto; position: relative; padding-right: 2px; }
+  .feed-items::-webkit-scrollbar { width: 6px; }
+  .feed-items::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  .feed-item { padding: 14px 0; border-bottom: 1px solid var(--glass-border); animation: feedIn 0.5s cubic-bezier(0.16,1,0.3,1) backwards; }
+  .feed-item:last-child { border-bottom: none; }
+  @keyframes feedIn { from { opacity: 0; transform: translateY(-8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+  .feed-main { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .feed-winner { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+  .feed-arrow { color: var(--fg-muted); font-size: 11px; flex: none; font-weight: 700; opacity: 0.6; }
+  .feed-meta { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-dim); line-height: 1.5; }
+  .feed-empty { color: var(--fg-dim); font-size: 12px; text-align: center; padding: 40px 0; font-style: italic; }
+
+  @media (max-width: 1100px) {
+    .controls { grid-template-columns: 1fr 1fr; }
+    .control-section:nth-child(2) { border-right: none; }
+    .control-section:nth-child(3) { grid-column: 1 / -1; border-top: 1px solid var(--glass-border); border-right: none; }
+  }
+  @media (max-width: 960px) {
+    .tournament-layout { flex-direction: column; }
+    .feed { width: 100%; max-height: 260px; }
+    .flux-lines-bg { opacity: 0.35; }
+    body.intro-active .flux-lines-bg { opacity: 0.65; }
+  }
+  @media (max-width: 720px) {
+    header { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
+    .hdr-stats { display: none; }
+    .twitch-badge .twitch-text { display: none; }
+    .twitch-badge { padding: 8px 10px; gap: 0; }
+    .twitch-badge::before { display: none; }
+    .controls { grid-template-columns: 1fr; }
+    .control-section { border-right: none; border-bottom: 1px solid var(--glass-border); padding: 20px; }
+    .control-section:last-child { border-bottom: none; }
+    #bracketView { padding: 16px; }
+    .toolbar h2 { font-size: 18px; }
+    .bracket-scroll { padding: 28px 24px 28px 40px; max-height: calc(100vh - 200px); }
+    .bracket { gap: 64px; }
+    .round { min-width: 220px; }
+    .empty-state { margin-top: 60px; }
+    .empty-state h2 { font-size: 20px; }
+    .meteors-container { opacity: 0.5; }
+    .shimmer-btn .shimmer-text { padding: 9px 16px; font-size: 9px; }
+    .shimmer-btn-cta .shimmer-text { padding: 12px 18px; }
+    .toolbar .actions { width: 100%; margin-left: 0; }
+    .toolbar .actions .btn-sm { flex: 1; }
+    .flux-lines-bg { display: none; }
+    .intro-screen::after { inset: 16px; }
+    .intro-corner { display: none; }
+    .intro-screen { padding: 24px 20px; }
+    .intro-links { gap: 8px; }
+    .intro-telegram-text, .intro-twitch-text { font-size: 11px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    .meteors-container, .liquid-bg { display: none; }
+    .shimmer-btn .shimmer-text::after { display: none; }
+    .intro-line::after { display: none; }
+    .intro-enter::before { display: none; }
+    .flux-lines-bg { animation: none; opacity: 0.5; }
+  }
+</style>
+</head>
+<body class="intro-active">
+
+<!-- INTRO SCREEN -->
+<div class="intro-screen" id="introScreen" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+  <span class="intro-corner tl"></span>
+  <span class="intro-corner tr"></span>
+  <span class="intro-corner bl"></span>
+  <span class="intro-corner br"></span>
+
+  <div class="intro-content">
+    <div class="intro-eyebrow">CS2 TOURNAMENT BRACKET</div>
+
+    <h1 class="intro-title" id="introTitle">
+      <span class="intro-line" data-text="MAKE HANTOM">MAKE HANTOM</span>
+      <span class="intro-line" data-text="FOR MOUNTES">FOR MOUNTES</span>
+    </h1>
+
+    <div class="intro-divider"></div>
+
+    <div class="intro-links">
+      <a class="intro-twitch"
+         href="https://www.twitch.tv/m0untes13"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="Twitch канал m0untes13">
+        <svg class="intro-twitch-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+        </svg>
+        <span class="intro-twitch-text">twitch.tv/m0untes13</span>
+      </a>
+
+      <a class="intro-telegram"
+         href="https://t.me/m0untes13"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="Telegram канал m0untes13">
+        <svg class="intro-telegram-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        </svg>
+        <span class="intro-telegram-text">t.me/m0untes13</span>
+      </a>
+    </div>
+
+    <button class="intro-enter" id="introEnter" type="button">
+      <span>Войти</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </button>
+
+    <div class="intro-hint">или нажми <kbd>Enter</kbd></div>
+  </div>
+</div>
+
+<svg class="liquid-filter-defs" aria-hidden="true">
+  <defs>
+    <filter id="liquid-lens" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="1" result="turbulence"/>
+      <feGaussianBlur in="turbulence" stdDeviation="2" result="blurredNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="displaced"/>
+      <feGaussianBlur in="displaced" stdDeviation="4" result="finalBlur"/>
+      <feComposite in="finalBlur" in2="finalBlur" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="liquid-bg"></div>
+<div class="flux-lines-bg" id="fluxLinesBg" aria-hidden="true"></div>
+<div class="meteors-container" id="meteors"></div>
+
+<header>
+  <div class="brand">
+    <span class="mark"></span>
+    <span>CS2 Bracket</span>
+  </div>
+  <a class="twitch-badge"
+     href="https://www.twitch.tv/m0untes13"
+     target="_blank"
+     rel="noopener noreferrer"
+     aria-label="Twitch — m0untes13">
+    <svg class="twitch-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+    </svg>
+    <span class="twitch-text">make hantom for <strong>mountes13</strong></span>
+  </a>
+  <div class="hdr-stats">
+    <span>Пул: <span class="val" id="hdrPool">0</span></span>
+    <span>Турнир: <span class="val" id="hdrTourn">—</span></span>
+  </div>
+  <div class="hdr-actions">
+    <button class="shimmer-btn" id="createBtnTop" style="display:none;">
+      <span class="shimmer-text">Создать сетку</span>
+    </button>
+    <button class="btn-toggle open" id="toggleBtn">
+      <span>Настройки</span>
+      <span class="chev">▾</span>
+    </button>
+  </div>
+</header>
+
+<div class="controls" id="controls">
+  <section class="control-section">
+    <div class="sec-title"><span class="num">01</span> Турнир</div>
+    <div>
+      <label class="lbl" for="tournName">Название</label>
+      <input type="text" id="tournName" placeholder="CS2 Weekend Cup" value="CS2 Турнир">
+    </div>
+    <div>
+      <label class="lbl">Формат</label>
+      <div class="format-row">
+        <button class="seg-btn fmt-btn active" data-fmt="1">1×1</button>
+        <button class="seg-btn fmt-btn" data-fmt="2">2×2</button>
+        <button class="seg-btn fmt-btn" data-fmt="3">3×3</button>
+        <button class="seg-btn fmt-btn" data-fmt="4">4×4</button>
+        <button class="seg-btn fmt-btn" data-fmt="5">5×5</button>
+      </div>
+    </div>
+    <div>
+      <label class="lbl">Максимум участников</label>
+      <div class="max-row">
+        <button class="seg-btn max-btn" data-max="8">8</button>
+        <button class="seg-btn max-btn" data-max="16">16</button>
+        <button class="seg-btn max-btn active" data-max="32">32</button>
+        <button class="seg-btn max-btn" data-max="64">64</button>
+      </div>
+    </div>
+    <div class="info-mini">
+      <div>
+        <div class="il">Игроков</div>
+        <div class="iv" id="infoPool">0<small>/32</small></div>
+      </div>
+      <div>
+        <div class="il">Команд</div>
+        <div class="iv" id="infoTeams">0</div>
+      </div>
+      <div>
+        <div class="il">Слотов</div>
+        <div class="iv" id="infoBracket">—</div>
+      </div>
+    </div>
+    <div class="leftover-hint" id="leftoverHint" hidden></div>
+    <label class="check">
+      <input type="checkbox" id="shuffle">
+      Случайная жеребьёвка
+    </label>
+    <button class="shimmer-btn shimmer-btn-cta" id="createBtn" disabled>
+      <span class="shimmer-text">Создать сетку</span>
+    </button>
+  </section>
+
+  <section class="control-section">
+    <div class="sec-title"><span class="num">02</span> Игроки</div>
+    <div class="pool-hint">
+      <span>Из Twitch или вручную</span>
+      <span class="counter" id="poolCounter">0<span class="c-max">/32</span></span>
+    </div>
+    <div class="manual-add">
+      <input type="text" id="newPlayerInput" placeholder="Никнейм" autocomplete="off" maxlength="32">
+      <button class="btn-sm" id="addPlayerBtn">+</button>
+    </div>
+    <div class="pool-list" id="poolList">
+      <div class="pool-empty">Пул пуст — добавьте игроков</div>
+    </div>
+    <div class="pool-actions">
+      <button class="btn-sm" id="shufflePlayersBtn" disabled>Перемешать</button>
+      <button class="btn-sm danger" id="clearPlayersBtn" disabled>Очистить</button>
+    </div>
+  </section>
+
+  <section class="control-section">
+    <div class="sec-title"><span class="num">03</span> Twitch</div>
+    <div class="input-row">
+      <input type="text" id="twitchChannel" placeholder="Ник стримера">
+      <input type="text" id="twitchKeyword" placeholder="!join" value="!join" style="max-width:80px;">
+    </div>
+    <button class="btn-sm" id="twitchConnectBtn" style="width:100%;">Подключиться к чату</button>
+    <div class="status-line" id="twitchStatus">
+      <span class="led"></span>
+      <span class="status-text">Не подключено</span>
+      <button class="btn-sm" id="twitchDisconnectBtn" style="margin-left:auto;display:none;padding:4px 8px;font-size:9px;">×</button>
+    </div>
+    <div class="found-list" id="twitchFound">
+      <span class="empty">Здесь появятся пользователи, написавшие ключевое слово</span>
+    </div>
+    <div class="pool-actions">
+      <button class="btn-sm" id="twitchApplyBtn" disabled>Добавить в пул</button>
+      <button class="btn-sm danger" id="twitchClearBtn" disabled>×</button>
+      <label class="check" style="margin-left:auto;">
+        <input type="checkbox" id="twitchAutoAdd">
+        авто
+      </label>
+    </div>
+  </section>
+</div>
+
+<main>
+  <div class="empty-state" id="emptyState">
+    <div class="ico">◯</div>
+    <h2>Сетка пока не создана</h2>
+    <p>Добавьте игроков, выберите формат и нажмите «Создать сетку»</p>
+  </div>
+
+  <div id="bracketView" hidden>
+    <div class="toolbar">
+      <h2 class="gradient-text" id="bracketTitle">Турнир</h2>
+      <span class="meta" id="bracketMeta">—</span>
+      <div class="actions">
+        <button class="btn-sm" id="resetBtn">Сбросить прогресс</button>
+        <button class="btn-sm danger" id="newTournBtn">Новый турнир</button>
+      </div>
+    </div>
+
+    <div class="bracket-hint">
+      Клик по игроку — он проходит дальше. Повторный клик — отменить выбор. Значок ✎ — заменить игрока.
+    </div>
+
+    <div class="tournament-layout">
+      <div class="bracket-scroll">
+        <div class="bracket" id="rounds"></div>
+      </div>
+      <aside class="feed">
+        <div class="feed-title">Результаты</div>
+        <div class="feed-items" id="feed">
+          <div class="feed-empty">Пока нет завершённых матчей</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="replaceModal" hidden>
+  <div class="modal">
+    <div class="modal-title">Заменить игрока</div>
+    <div class="modal-sub">Команда: <b id="replaceTeamName">—</b></div>
+    <div class="modal-members" id="replaceMembers"></div>
+    <div class="modal-error" id="replaceError"></div>
+    <div class="modal-actions">
+      <button class="btn-sm" type="button" id="replaceCancel">Отмена</button>
+      <button class="btn-sm" type="button" id="replaceConfirm">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* INTRO SCREEN */
+(function initIntroScreen() {
+  const intro = document.getElementById('introScreen');
+  const enterBtn = document.getElementById('introEnter');
+  if (!intro || !enterBtn) return;
+
+  const SS_KEY = 'cs2_intro_seen_v1';
+  let seen = false;
+  try { seen = sessionStorage.getItem(SS_KEY) === '1'; } catch (e) {}
+
+  if (seen) {
+    intro.classList.add('is-hidden');
+    document.body.classList.remove('intro-active');
+    intro.style.display = 'none';
+    return;
+  }
+
+  const close = () => {
+    intro.classList.add('is-hidden');
+    document.body.classList.remove('intro-active');
+    try { sessionStorage.setItem(SS_KEY, '1'); } catch (e) {}
+    setTimeout(() => {
+      intro.style.display = 'none';
+      const firstInput = document.getElementById('tournName');
+      if (firstInput) {
+        try { firstInput.focus({ preventScroll: true }); } catch (e) {}
+      }
+    }, 950);
+  };
+
+  enterBtn.addEventListener('click', close);
+
+  const onKey = (e) => {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  };
+  window.addEventListener('keydown', onKey);
+
+  setTimeout(() => {
+    try { enterBtn.focus({ preventScroll: true }); } catch (e) {}
+  }, 100);
+})();
+
+/* FLUX LINES BACKGROUND */
+(function initFluxLinesBackground() {
+  const container = document.getElementById('fluxLinesBg');
+  if (!container) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia?.('(max-width: 720px)').matches) return;
+
+  const MAX_COLORS = 8;
+  const INTRO_SECONDS = 1.8;
+  const FLOW = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
+
+  const VERTEX = `#version 300 es
+in vec2 aPosition;
+void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+
+  const FIELD = `
+float hash(vec3 p3) { p3 = fract(p3 * 0.1031); p3 += dot(p3, p3.zyx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float smin(float a, float b, float k) { float r = exp2(-a / k) + exp2(-b / k); return -k * log2(r); }
+float sinlerp(float a, float b, float w) { return mix(a, b, (sin(w * 3.14159265 - 3.14159265 / 2.0) + 1.0) / 2.0); }
+float vn(vec2 p, float s, float seed) {
+  vec2 cellp = floor(p / s); vec2 relp = mod(p, s);
+  float g1 = hash(vec3(cellp, seed));
+  float g2 = hash(vec3(cellp.x + 1.0, cellp.y, seed));
+  float g3 = hash(vec3(cellp.x + 1.0, cellp.y + 1.0, seed));
+  float g4 = hash(vec3(cellp.x, cellp.y + 1.0, seed));
+  float bx = sinlerp(g1, g2, relp.x / s);
+  float tx = sinlerp(g4, g3, relp.x / s);
+  return sinlerp(bx, tx, relp.y / s);
+}
+float dbn(vec2 p, float s, float seed) {
+  float o = s / 2.0;
+  float n0 = vn(p, s, seed);
+  float n1 = vn(p + vec2(o, o), s, seed + 0.1);
+  float n2 = vn(p + vec2(-o, o), s, seed + 0.2);
+  float n3 = vn(p + vec2(o, -o), s, seed + 0.3);
+  float n4 = vn(p + vec2(-o, -o), s, seed + 0.4);
+  return (2.0 * n0 + 1.5 * n1 + 1.25 * n2 + 1.125 * n3 + n4) / 7.0;
+}`;
+
+  const FRAGMENT = `#version 300 es
+precision highp float;
+precision highp int;
+uniform vec2 uResolution;
+uniform float uTime;
+uniform vec2 uFlow;
+uniform float uSpeed;
+uniform float uScale;
+uniform float uTurbulence;
+uniform float uFluidity;
+uniform float uRimWidth;
+uniform float uSharpness;
+uniform float uShimmer;
+uniform float uGlow;
+uniform float uLine;
+uniform float uMaxHalf;
+uniform vec3 uColors[${MAX_COLORS}];
+uniform int uColorCount;
+uniform vec4 uMagnet;
+uniform vec4 uSwirl;
+uniform float uReveal;
+uniform float uLight;
+uniform float uOpaque;
+uniform vec3 uBackground;
+uniform float uOpacity;
+out vec4 outColor;
+${FIELD}
+
+vec3 palette(float h) {
+  float x = clamp(h, 0.0, 1.0) * float(uColorCount - 1);
+  int i = int(floor(x));
+  int j = min(i + 1, uColorCount - 1);
+  return mix(uColors[i], uColors[j], smoothstep(0.0, 1.0, x - float(i)));
+}
+
+void main() {
+  float ref = 700.0 / max(uScale, 0.05);
+  vec2 frag = gl_FragCoord.xy;
+  vec2 toMagnet = (frag - uMagnet.xy) / uResolution.y;
+  float pull = uMagnet.z * exp(-dot(toMagnet, toMagnet) / (uMagnet.w * uMagnet.w));
+  if (pull > 0.001) {
+    float angle = pull * 0.55; float c = cos(angle); float s = sin(angle);
+    frag = uMagnet.xy + mat2(c, s, -s, c) * (frag - uMagnet.xy);
+  }
+  if (uSwirl.w > 0.0) {
+    vec2 d = frag - uSwirl.xy; float reach = uSwirl.z;
+    float angle = uSwirl.w * exp(-dot(d, d) / (reach * reach));
+    float c = cos(angle); float s = sin(angle);
+    frag = uSwirl.xy + mat2(c, s, -s, c) * d;
+  }
+  vec2 p = frag / uResolution.y * ref;
+  float spd = 200.0 * uSpeed;
+  float t = uTime;
+  vec2 dir = uFlow;
+  vec2 perp = vec2(-dir.y, dir.x);
+  float distort1 = vn(p + perp * (t * spd), 60.0, 10.0) * 50.0 * uTurbulence;
+  float distort2 = vn(p - perp * (t * spd), 120.0, 15.0) * 100.0 * uTurbulence;
+  float peaks = dbn(p + distort1 + dir * (t * spd * 0.5), 40.0, 1.0);
+  float peaks2 = dbn(p + distort2 - dir * (t * spd * 0.5), 40.0, 0.0);
+  float field = smin(peaks, peaks2, max(uFluidity, 0.001));
+  float slope = length(vec2(dFdx(field), dFdy(field)));
+  float gap = abs(field - 0.4);
+  float pixels = gap / max(slope, 1e-6);
+  float halfBand = max(uRimWidth, 0.001) * 0.5;
+  float across = max(gap / halfBand, pixels / uMaxHalf);
+  float band = 5.0 * uRimWidth * (1.0 - across);
+  float reveal = smoothstep(0.2, 0.85, pull);
+  float shimmer = vn(p + dir * (t * spd * 0.5), 60.0, 12.0) * uShimmer * (1.0 - reveal * 0.75);
+  float lit = clamp(band - shimmer, 0.0, 1.0);
+  float glow = pow(lit, uSharpness) * uGlow * (1.0 + reveal * 0.25);
+  float core = uLine > 0.0 ? smoothstep(uLine + 0.75, uLine - 0.75, pixels) * max(smoothstep(0.08, 0.6, glow), reveal) : 0.0;
+  float shine = clamp(glow, 0.0, 1.0);
+  float energy = max(shine * shine, core * 0.85) * uReveal;
+  float h = clamp(0.5 + (peaks - peaks2) * 0.8, 0.0, 1.0);
+  vec3 tint = palette(h);
+  if (uLight > 0.5) {
+    float chroma = max(tint.r, max(tint.g, tint.b)) - min(tint.r, min(tint.g, tint.b));
+    vec3 ink = mix(vec3(0.07, 0.07, 0.08), tint * 0.55, clamp(chroma * 1.6, 0.0, 1.0));
+    float cover = energy * uOpacity;
+    outColor = uOpaque > 0.5 ? vec4(mix(uBackground, ink, cover), 1.0) : vec4(ink * cover, cover);
+    return;
+  }
+  vec3 light = tint * energy * uOpacity;
+  outColor = uOpaque > 0.5 ? vec4(uBackground + light, 1.0) : vec4(light, max(light.r, max(light.g, light.b)));
+}`;
+
+  const clampFn = (v, min, max) => Math.min(max, Math.max(min, v));
+
+  const compile = (gl, type, source) => {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+    gl.deleteShader(shader);
+    return null;
+  };
+
+  const link = (gl) => {
+    const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX);
+    const fragment = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT);
+    const program = gl.createProgram();
+    if (!vertex || !fragment || !program) return null;
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.bindAttribLocation(program, 0, 'aPosition');
+    gl.linkProgram(program);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { gl.deleteProgram(program); return null; }
+    const uniforms = {};
+    const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < count; i++) {
+      const info = gl.getActiveUniform(program, i);
+      if (info) uniforms[info.name.replace('[0]', '')] = gl.getUniformLocation(program, info.name);
+    }
+    return { program, uniforms };
+  };
+
+  const settings = {
+    colors: ['#ffffff', '#8a8a8a', '#ffffff'],
+    speed: 0.22, scale: 2.1, turbulence: 0.75, fluidity: 0.15,
+    rimWidth: 0.18, sharpness: 2.8, shimmer: 1.8, glow: 1.1, lineWidth: 0.6,
+    flow: FLOW.down, opacity: 0.95
+  };
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'flux-lines-canvas';
+  canvas.setAttribute('aria-hidden', 'true');
+  container.appendChild(canvas);
+
+  const gl = canvas.getContext('webgl2', {
+    alpha: true, premultipliedAlpha: true, antialias: false,
+    depth: false, stencil: false, powerPreference: 'low-power'
+  });
+  if (!gl) return;
+
+  const program = link(gl);
+  if (!program) return;
+  const u = program.uniforms;
+
+  const buffer = gl.createBuffer();
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  const cache = new Map();
+  const parse = (value, fallback) => {
+    if (!value) return fallback;
+    const key = String(value);
+    if (cache.has(key)) return cache.get(key);
+    let rgb = fallback;
+    if (probe) {
+      probe.clearRect(0, 0, 1, 1);
+      probe.fillStyle = '#000000';
+      probe.fillStyle = key;
+      probe.fillRect(0, 0, 1, 1);
+      const data = probe.getImageData(0, 0, 1, 1).data;
+      rgb = [data[0] / 255, data[1] / 255, data[2] / 255];
+    }
+    cache.set(key, rgb);
+    return rgb;
+  };
+  const palette = new Float32Array(MAX_COLORS * 3);
+
+  let time = 0;
+  let reveal = 0;
+  let raf = 0;
+  let last = 0;
+  let visible = true;
+
+  const render = () => {
+    const ratio = canvas.width / Math.max(1, container.clientWidth);
+    settings.colors.forEach((value, index) => palette.set(parse(value, [1, 1, 1]), index * 3));
+    const intro = Math.min(1, reveal);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(program.program);
+    gl.bindVertexArray(vao);
+    gl.uniform2f(u.uResolution, canvas.width, canvas.height);
+    gl.uniform1f(u.uTime, time);
+    gl.uniform2f(u.uFlow, settings.flow[0], settings.flow[1]);
+    gl.uniform1f(u.uSpeed, settings.speed);
+    gl.uniform1f(u.uScale, settings.scale);
+    gl.uniform1f(u.uTurbulence, settings.turbulence);
+    gl.uniform1f(u.uFluidity, settings.fluidity);
+    gl.uniform1f(u.uRimWidth, settings.rimWidth);
+    gl.uniform1f(u.uSharpness, settings.sharpness);
+    gl.uniform1f(u.uShimmer, settings.shimmer);
+    gl.uniform1f(u.uGlow, settings.glow);
+    gl.uniform1f(u.uLine, settings.lineWidth * ratio * 0.5);
+    gl.uniform1f(u.uMaxHalf, 28 * ratio);
+    gl.uniform3fv(u.uColors, palette);
+    gl.uniform1i(u.uColorCount, settings.colors.length);
+    gl.uniform4f(u.uMagnet, 0, 0, 0, 0.35);
+    gl.uniform4f(u.uSwirl, 0, 0, canvas.height * 0.22, 0);
+    gl.uniform1f(u.uReveal, intro * intro * (3 - 2 * intro));
+    gl.uniform1f(u.uLight, 0);
+    gl.uniform1f(u.uOpaque, 0);
+    gl.uniform3fv(u.uBackground, parse(null, [0.02, 0.02, 0.02]));
+    gl.uniform1f(u.uOpacity, settings.opacity);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const frame = (now) => {
+    raf = 0;
+    if (!visible || document.hidden) return;
+    const dt = last ? clampFn((now - last) / 1000, 0.0005, 0.05) : 1 / 60;
+    last = now;
+    time += dt;
+    if (reveal < 1) reveal = Math.min(1, reveal + dt / INTRO_SECONDS);
+    render();
+    raf = requestAnimationFrame(frame);
+  };
+
+  const wake = () => {
+    if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame);
+  };
+
+  const resize = () => {
+    const width = Math.max(1, container.clientWidth);
+    const height = Math.max(1, container.clientHeight);
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.max(1, Math.round(width * ratio));
+    canvas.height = Math.max(1, Math.round(height * ratio));
+    render();
+  };
+
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(container);
+  const intersection = new IntersectionObserver((entries) => {
+    visible = entries.some((entry) => entry.isIntersecting);
+    if (visible) { last = 0; wake(); }
+  });
+  intersection.observe(container);
+  document.addEventListener('visibilitychange', () => { last = 0; wake(); });
+  resize();
+  wake();
+})();
+
+/* MAIN APP */
+(() => {
+  'use strict';
+
+  function initMeteors() {
+    const container = document.getElementById('meteors');
+    if (!container) return;
+    const count = 16;
+    for (let i = 0; i < count; i++) {
+      const meteor = document.createElement('div');
+      meteor.className = 'meteor';
+      const angle = 215 + (Math.random() * 20 - 10);
+      meteor.style.setProperty('--angle', angle + 'deg');
+      meteor.style.left = (Math.random() * 100) + '%';
+      meteor.style.top = (Math.random() * 60) + '%';
+      meteor.style.animationDelay = (Math.random() * 6) + 's';
+      meteor.style.animationDuration = (4 + Math.random() * 5) + 's';
+      meteor.style.opacity = 0.12 + Math.random() * 0.3;
+      container.appendChild(meteor);
+    }
+  }
+
+  const LS_POOL = 'cs2_pool_v11';
+  const LS_TOURN = 'cs2_tournament_v11';
+  const LS_UI = 'cs2_ui_v11';
+
+  let pool = [];
+  let tournament = null;
+  let twitchUsers = [];
+  let twitchSocket = null;
+  let animateEntrance = false;
+  let controlsCollapsed = false;
+  let currentFormat = 1;
+  let maxPlayers = 32;
+
+  const $ = id => document.getElementById(id);
+  const $$ = sel => document.querySelectorAll(sel);
+  const esc = s => String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const nextPow2 = n => { let s = 2; while (s < n) s *= 2; return s; };
+
+  function loadState() {
+    try {
+      const p = localStorage.getItem(LS_POOL);
+      if (p) pool = JSON.parse(p) || [];
+      const t = localStorage.getItem(LS_TOURN);
+      if (t) tournament = JSON.parse(t) || null;
+      const u = localStorage.getItem(LS_UI);
+      if (u) {
+        const ui = JSON.parse(u);
+        controlsCollapsed = !!ui.controlsCollapsed;
+        if (ui.currentFormat) currentFormat = ui.currentFormat;
+        if (ui.maxPlayers) maxPlayers = ui.maxPlayers;
+      }
+    } catch (e) {}
+  }
+  function saveState() {
+    try {
+      localStorage.setItem(LS_POOL, JSON.stringify(pool));
+      if (tournament) localStorage.setItem(LS_TOURN, JSON.stringify(tournament));
+      else localStorage.removeItem(LS_TOURN);
+      localStorage.setItem(LS_UI, JSON.stringify({ controlsCollapsed, currentFormat, maxPlayers }));
+    } catch (e) {}
+  }
+
+  function canLaunchTournament() {
+    const minRequired = currentFormat * 2;
+    if (maxPlayers < minRequired) return false;
+    if (pool.length < minRequired) return false;
+    if (pool.length % currentFormat !== 0) return false;
+    return true;
+  }
+
+  function updateHeader() {
+    $('hdrPool').innerHTML = pool.length + '<span class="sep">/</span>' + maxPlayers;
+    $('hdrTourn').textContent = tournament ? tournament.name : '—';
+    const topBtn = $('createBtnTop');
+    if (topBtn) {
+      topBtn.style.display = (canLaunchTournament() && !tournament) ? '' : 'none';
+    }
+  }
+
+  function applyControlsState() {
+    const controls = $('controls');
+    const btn = $('toggleBtn');
+    controls.classList.toggle('collapsed', controlsCollapsed);
+    btn.classList.toggle('open', !controlsCollapsed);
+    btn.querySelector('span').textContent = controlsCollapsed ? 'Настройки' : 'Скрыть';
+  }
+
+  $('toggleBtn').addEventListener('click', () => {
+    controlsCollapsed = !controlsCollapsed;
+    applyControlsState();
+    saveState();
+  });
+
+  function applyFormatUI() {
+    $$('.fmt-btn').forEach(b => b.classList.toggle('active', +b.dataset.fmt === currentFormat));
+  }
+  $$('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFormat = +btn.dataset.fmt;
+      applyFormatUI();
+      saveState();
+      renderTournamentSection();
+      updateHeader();
+    });
+  });
+
+  function applyMaxUI() {
+    $$('.max-btn').forEach(b => b.classList.toggle('active', +b.dataset.max === maxPlayers));
+  }
+  $$('.max-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newMax = +btn.dataset.max;
+      if (newMax === maxPlayers) return;
+      if (pool.length > newMax) {
+        if (!confirm('Пул содержит ' + pool.length + ' игроков. Оставить только первых ' + newMax + '?')) return;
+        pool = pool.slice(0, newMax);
+      }
+      maxPlayers = newMax;
+      saveState();
+      applyMaxUI();
+      updateHeader();
+      renderPlayersSection();
+      renderTournamentSection();
+      renderTwitchSection();
+    });
+  });
+
+  function isPoolFull() { return pool.length >= maxPlayers; }
+
+  function animateNumber(el, from, to) {
+    if (from === to) return;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+    setTimeout(() => el.classList.remove('pulse'), 450);
+  }
+
+  function renderTournamentSection() {
+    const players = pool.length;
+    const teams = Math.floor(players / currentFormat);
+    const leftover = players % currentFormat;
+    const minRequired = currentFormat * 2;
+
+    const oldPool = parseInt($('infoPool').textContent) || 0;
+    const oldTeams = parseInt($('infoTeams').textContent) || 0;
+
+    $('infoPool').innerHTML = players + '<small>/' + maxPlayers + '</small>';
+    $('infoTeams').textContent = teams;
+    $('infoBracket').innerHTML = teams >= 2 ? nextPow2(teams) + '<small>слотов</small>' : '—';
+
+    animateNumber($('infoPool'), oldPool, players);
+    animateNumber($('infoTeams'), oldTeams, teams);
+
+    const hint = $('leftoverHint');
+    let hintText = '';
+
+    if (maxPlayers < minRequired) {
+      hintText = 'Лимит слишком мал для ' + currentFormat + '×' + currentFormat + ' — увеличьте до <b>' + minRequired + '</b>';
+    } else if (players < minRequired) {
+      hintText = 'Нужно минимум <b>' + minRequired + '</b> участников для ' + currentFormat + '×' + currentFormat + ' — добавьте ещё <b>' + (minRequired - players) + '</b>';
+    } else if (leftover > 0) {
+      const needMore = currentFormat - leftover;
+      hintText = 'Без команды: <b>' + leftover + '</b> — добавьте ещё <b>' + needMore + '</b> или уберите <b>' + leftover + '</b> лишних';
+    }
+    hint.innerHTML = hintText;
+    hint.hidden = !hintText;
+
+    const btn = $('createBtn');
+    btn.disabled = !canLaunchTournament();
+    btn.querySelector('.shimmer-text').textContent = tournament ? 'Создать новую сетку' : 'Создать сетку';
+  }
+
+  function startTournament() {
+    if (!canLaunchTournament()) return;
+    const name = $('tournName').value.trim() || 'CS2 Турнир';
+    tournament = createTournament(name, pool, $('shuffle').checked, currentFormat);
+    propagate();
+    saveState();
+    updateHeader();
+    animateEntrance = true;
+    controlsCollapsed = true;
+    applyControlsState();
+    renderBracketView();
+  }
+
+  $('createBtn').addEventListener('click', startTournament);
+  $('createBtnTop').addEventListener('click', startTournament);
+
+  function addPlayer(name) {
+    name = String(name).trim();
+    if (!name) return 'empty';
+    if (name.length > 32) name = name.slice(0, 32);
+    if (pool.length >= maxPlayers) return 'full';
+    if (pool.some(p => p.toLowerCase() === name.toLowerCase())) return 'dup';
+    pool.push(name);
+    return 'ok';
+  }
+
+  function renderPlayersSection() {
+    const list = $('poolList');
+    const counter = $('poolCounter');
+    const input = $('newPlayerInput');
+    const addBtn = $('addPlayerBtn');
+    const full = isPoolFull();
+
+    if (counter) {
+      counter.innerHTML = pool.length + '<span class="c-max">/' + maxPlayers + '</span>';
+      counter.classList.toggle('full', full);
+    }
+
+    input.disabled = full;
+    addBtn.disabled = full;
+    input.placeholder = full ? 'Пул заполнен' : 'Никнейм';
+
+    if (pool.length === 0) {
+      list.innerHTML = '<div class="pool-empty">Пул пуст — добавьте игроков</div>';
+    } else {
+      list.innerHTML = pool.map((name, i) =>
+        '<div class="pool-item">' +
+          '<span class="idx">' + String(i + 1).padStart(2, '0') + '</span>' +
+          '<span class="pn">' + esc(name) + '</span>' +
+          '<button class="rm" data-idx="' + i + '" title="Удалить">×</button>' +
+        '</div>'
+      ).join('');
+      list.querySelectorAll('.rm').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pool.splice(+btn.dataset.idx, 1);
+          saveState();
+          updateHeader();
+          renderPlayersSection();
+          renderTournamentSection();
+          renderTwitchSection();
+        });
+      });
+    }
+    $('shufflePlayersBtn').disabled = pool.length < 2;
+    $('clearPlayersBtn').disabled = pool.length === 0;
+  }
+
+  function commitManualAdd() {
+    const input = $('newPlayerInput');
+    const v = input.value.trim();
+    if (!v) return;
+    const result = addPlayer(v);
+    if (result === 'ok') {
+      input.value = '';
+      saveState();
+      updateHeader();
+      renderPlayersSection();
+      renderTournamentSection();
+      renderTwitchSection();
+    } else if (result === 'dup') {
+      input.select();
+      input.style.borderColor = 'rgba(255,107,107,0.6)';
+      setTimeout(() => { input.style.borderColor = ''; }, 600);
+    } else if (result === 'full') {
+      input.value = '';
+      renderPlayersSection();
+    }
+    input.focus();
+  }
+
+  $('addPlayerBtn').addEventListener('click', commitManualAdd);
+  $('newPlayerInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitManualAdd(); }
+  });
+
+  $('shufflePlayersBtn').addEventListener('click', () => {
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    saveState();
+    renderPlayersSection();
+  });
+
+  $('clearPlayersBtn').addEventListener('click', () => {
+    if (pool.length === 0) return;
+    if (!confirm('Удалить всех игроков из пула?')) return;
+    pool = [];
+    saveState();
+    updateHeader();
+    renderPlayersSection();
+    renderTournamentSection();
+    renderTwitchSection();
+  });
+
+  function setTwitchStatus(text, type) {
+    const el = $('twitchStatus');
+    el.className = 'status-line' + (type ? ' ' + type : '');
+    el.querySelector('.status-text').textContent = text;
+    $('twitchDisconnectBtn').style.display = twitchSocket ? '' : 'none';
+  }
+
+  function renderTwitchSection() {
+    const found = $('twitchFound');
+    if (twitchUsers.length === 0) {
+      found.innerHTML = '<span class="empty">Здесь появятся пользователи, написавшие ключевое слово</span>';
+    } else {
+      let html = twitchUsers.map(u => {
+        const inPool = pool.some(p => p.toLowerCase() === u.toLowerCase());
+        return '<span class="tag' + (inPool ? ' applied' : '') + '">' + esc(u) + '</span>';
+      }).join('');
+      if (isPoolFull()) html += '<div class="full-warn">Пул заполнен</div>';
+      found.innerHTML = html;
+    }
+    $('twitchApplyBtn').disabled = twitchUsers.length === 0 || isPoolFull();
+    $('twitchClearBtn').disabled = twitchUsers.length === 0;
+  }
+
+  function addTwitchUser(name) {
+    if (!name) return;
+    if (twitchUsers.some(u => u.toLowerCase() === name.toLowerCase())) return;
+    twitchUsers.push(name);
+    if ($('twitchAutoAdd').checked) {
+      if (addPlayer(name) === 'ok') {
+        saveState();
+        updateHeader();
+        renderPlayersSection();
+        renderTournamentSection();
+      }
+    }
+    renderTwitchSection();
+  }
+
+  function connectTwitch(channel, keyword) {
+    disconnectTwitch();
+    const clean = channel.replace(/^#/, '').trim().toLowerCase();
+    if (!clean) { setTwitchStatus('Введите ник стримера', 'error'); return; }
+    if (!keyword.trim()) { setTwitchStatus('Введите ключевое слово', 'error'); return; }
+    const kw = keyword.trim().toLowerCase();
+    setTwitchStatus('Подключение к #' + clean + '…');
+
+    const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+    twitchSocket = ws;
+
+    ws.addEventListener('open', () => {
+      ws.send('CAP REQ :twitch.tv/tags');
+      ws.send('PASS SCHMOOPIIE');
+      ws.send('NICK justinfan' + Math.floor(10000 + Math.random() * 90000));
+      ws.send('JOIN #' + clean);
+      setTwitchStatus('#' + clean + ' · «' + kw + '»', 'connected');
+    });
+
+    ws.addEventListener('message', event => {
+      const raw = event.data;
+      if (raw.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); return; }
+      raw.split('\r\n').forEach(line => {
+        if (!line.includes('PRIVMSG')) return;
+        let displayName = '', login = '', messageText = '';
+        const tagMatch = line.match(/@([^ ]+) /);
+        if (tagMatch) {
+          for (const tag of tagMatch[1].split(';')) {
+            if (tag.startsWith('display-name=')) displayName = tag.slice(13) || '';
+          }
+        }
+        const loginMatch = line.match(/:([^!]+)!/);
+        if (loginMatch) login = loginMatch[1];
+        const msgMatch = line.match(/PRIVMSG\s+#\S+\s+:(.*)$/);
+        if (msgMatch) messageText = msgMatch[1];
+        const name = displayName || login;
+        if (!name) return;
+        const words = messageText.toLowerCase().trim().split(/\s+/);
+        if (words.includes(kw)) addTwitchUser(name);
+      });
+    });
+
+    ws.addEventListener('close', () => {
+      if (twitchSocket === ws) { twitchSocket = null; setTwitchStatus('Соединение закрыто'); }
+    });
+    ws.addEventListener('error', () => setTwitchStatus('Ошибка — проверьте ник стримера', 'error'));
+  }
+
+  function disconnectTwitch() {
+    if (twitchSocket) {
+      try { twitchSocket.close(); } catch (e) {}
+      twitchSocket = null;
+      setTwitchStatus('Не подключено');
+    }
+  }
+
+  $('twitchConnectBtn').addEventListener('click', () => {
+    connectTwitch($('twitchChannel').value, $('twitchKeyword').value);
+  });
+  $('twitchDisconnectBtn').addEventListener('click', disconnectTwitch);
+
+  $('twitchApplyBtn').addEventListener('click', () => {
+    if (isPoolFull()) { alert('Пул заполнен (' + pool.length + '/' + maxPlayers + ').'); return; }
+    let added = 0;
+    for (const u of twitchUsers) {
+      if (addPlayer(u) === 'ok') added++;
+      if (isPoolFull()) break;
+    }
+    saveState();
+    updateHeader();
+    renderPlayersSection();
+    renderTournamentSection();
+    renderTwitchSection();
+    if (added > 0) alert('Добавлено ' + added + ' игроков в пул.');
+    else alert('Все найденные пользователи уже в пуле, либо пул заполнен.');
+  });
+
+  $('twitchClearBtn').addEventListener('click', () => {
+    twitchUsers = [];
+    renderTwitchSection();
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (twitchSocket) { try { twitchSocket.close(); } catch (e) {} }
+  });
+
+  function seedOrder(n) {
+    if (n <= 1) return [1];
+    const prev = seedOrder(n / 2);
+    const out = [];
+    for (const s of prev) { out.push(s); out.push(n + 1 - s); }
+    return out;
+  }
+
+  function teamDisplayName(members) {
+    if (!members || members.length === 0) return '';
+    if (members.length === 1) return members[0];
+    return members.join(' & ');
+  }
+
+  function createTournament(name, players, shuffle, format) {
+    let list = players.slice();
+    if (shuffle) {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+    }
+    const teamCount = Math.floor(list.length / format);
+    const teams = [];
+    for (let i = 0; i < teamCount; i++) {
+      const members = list.slice(i * format, (i + 1) * format);
+      teams.push({ name: teamDisplayName(members), members });
+    }
+    const size = nextPow2(teams.length);
+    const slots = seedOrder(size).map(seed => teams[seed - 1] || null);
+    const rounds = [];
+    const first = [];
+    for (let i = 0; i < size; i += 2) {
+      const t1 = slots[i], t2 = slots[i + 1];
+      first.push({
+        p1: t1 ? t1.name : null,
+        p1m: t1 ? t1.members : null,
+        p2: t2 ? t2.name : null,
+        p2m: t2 ? t2.members : null,
+        winner: null
+      });
+    }
+    rounds.push(first);
+    let cnt = first.length;
+    while (cnt > 1) {
+      cnt /= 2;
+      const r = [];
+      for (let i = 0; i < cnt; i++) r.push({ p1: null, p1m: null, p2: null, p2m: null, winner: null });
+      rounds.push(r);
+    }
+    return { name, format, players: list, teams, size, rounds };
+  }
+
+  function willProduceWinner(rounds, ri, mi) {
+    if (ri < 0 || !rounds[ri] || !rounds[ri][mi]) return false;
+    const m = rounds[ri][mi];
+    if (m.winner) return true;
+    if (ri === 0) return !!(m.p1 || m.p2);
+    return willProduceWinner(rounds, ri - 1, mi * 2) || willProduceWinner(rounds, ri - 1, mi * 2 + 1);
+  }
+
+  function propagate() {
+    if (!tournament) return;
+    const R = tournament.rounds;
+    for (const m of R[0]) {
+      if (m.p1 && !m.p2) m.winner = 1;
+      else if (!m.p1 && m.p2) m.winner = 2;
+      else if (!m.p1 && !m.p2) m.winner = null;
+    }
+    for (let ri = 0; ri < R.length - 1; ri++) {
+      const next = R[ri + 1];
+      for (let i = 0; i < next.length; i++) {
+        const a = R[ri][i * 2], b = R[ri][i * 2 + 1];
+        const nm = next[i];
+        const p1 = a.winner ? (a.winner === 1 ? a.p1 : a.p2) : null;
+        const p1m = a.winner ? (a.winner === 1 ? a.p1m : a.p2m) : null;
+        const p2 = b.winner ? (b.winner === 1 ? b.p1 : b.p2) : null;
+        const p2m = b.winner ? (b.winner === 1 ? b.p1m : b.p2m) : null;
+        if (nm.p1 !== p1) { nm.p1 = p1; nm.p1m = p1m; nm.winner = null; }
+        if (nm.p2 !== p2) { nm.p2 = p2; nm.p2m = p2m; nm.winner = null; }
+        const aWill = willProduceWinner(R, ri, i * 2);
+        const bWill = willProduceWinner(R, ri, i * 2 + 1);
+        if (nm.p1 && !nm.p2 && !bWill) nm.winner = 1;
+        else if (!nm.p1 && nm.p2 && !aWill) nm.winner = 2;
+        else if (!nm.p1 && !nm.p2) nm.winner = null;
+      }
+    }
+  }
+
+  function roundName(round) {
+    const n = round.length * 2;
+    if (n === 2) return 'Финал';
+    if (n === 4) return '1/2 финала';
+    if (n === 8) return '1/4 финала';
+    return '1/' + (n / 2) + ' финала';
+  }
+
+  function pickWinner(m, side) {
+    if (m.winner === side) m.winner = null;
+    else m.winner = side;
+    propagate();
+    saveState();
+    renderBracket();
+  }
+
+  let replaceTarget = null;
+
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function showReplaceError(msg) { $('replaceError').textContent = msg || ''; }
+
+  function openReplaceModal(team) {
+    if (!team || !tournament) return;
+    replaceTarget = { team, oldMembers: team.members.slice() };
+    $('replaceTeamName').textContent = team.name;
+    const container = $('replaceMembers');
+    container.innerHTML = '';
+    team.members.forEach(name => {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.maxLength = 32;
+      inp.autocomplete = 'off';
+      inp.value = name;
+      inp.placeholder = 'Никнейм';
+      container.appendChild(inp);
+    });
+    showReplaceError('');
+    $('replaceModal').hidden = false;
+    setTimeout(() => {
+      const first = container.querySelector('input');
+      if (first) { first.focus(); first.select(); }
+    }, 50);
+  }
+
+  function closeReplaceModal() {
+    $('replaceModal').hidden = true;
+    replaceTarget = null;
+    showReplaceError('');
+  }
+
+  function confirmReplace() {
+    if (!replaceTarget || !tournament) return;
+    const { team, oldMembers } = replaceTarget;
+    const inputs = $('replaceMembers').querySelectorAll('input');
+    const newMembers = Array.from(inputs).map(inp => inp.value.trim());
+
+    for (const m of newMembers) {
+      if (!m) { showReplaceError('Никнейм не может быть пустым'); return; }
+      if (m.length > 32) { showReplaceError('Слишком длинный никнейм (макс. 32)'); return; }
+    }
+    const lowerNew = newMembers.map(m => m.toLowerCase());
+    if (new Set(lowerNew).size !== lowerNew.length) {
+      showReplaceError('Имена в команде должны быть уникальны');
+      return;
+    }
+    const others = new Set();
+    tournament.teams.forEach(t => {
+      if (t === team) return;
+      t.members.forEach(m => others.add(m.toLowerCase()));
+    });
+    if (lowerNew.some(m => others.has(m))) {
+      showReplaceError('Игрок с таким именем уже есть в турнире');
+      return;
+    }
+    if (arraysEqual(oldMembers, newMembers)) { closeReplaceModal(); return; }
+
+    team.members = newMembers.slice();
+    team.name = teamDisplayName(team.members);
+
+    tournament.rounds.forEach(round => round.forEach(m => {
+      if (m.p1m && arraysEqual(m.p1m, oldMembers)) {
+        m.p1m = team.members; m.p1 = team.name;
+      }
+      if (m.p2m && arraysEqual(m.p2m, oldMembers)) {
+        m.p2m = team.members; m.p2 = team.name;
+      }
+    }));
+
+    const mapping = new Map();
+    oldMembers.forEach((old, i) => {
+      if (newMembers[i] !== old) mapping.set(old, newMembers[i]);
+    });
+    tournament.players = tournament.players.map(p => mapping.has(p) ? mapping.get(p) : p);
+
+    saveState();
+    closeReplaceModal();
+    renderBracket();
+  }
+
+  $('replaceCancel').addEventListener('click', closeReplaceModal);
+  $('replaceConfirm').addEventListener('click', confirmReplace);
+  $('replaceMembers').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmReplace(); }
+    else if (e.key === 'Escape') { closeReplaceModal(); }
+  });
+  $('replaceModal').addEventListener('click', e => {
+    if (e.target === $('replaceModal')) closeReplaceModal();
+  });
+
+  function renderBracketView() {
+    if (!tournament) {
+      $('emptyState').hidden = false;
+      $('bracketView').hidden = true;
+      return;
+    }
+    $('emptyState').hidden = true;
+    $('bracketView').hidden = false;
+    $('bracketTitle').textContent = tournament.name;
+    const fmt = tournament.format || 1;
+    const teamsCount = tournament.teams ? tournament.teams.length : tournament.players.length;
+    const countLabel = fmt === 1 ? 'игроков' : 'команд';
+    $('bracketMeta').textContent = teamsCount + ' ' + countLabel + ' · ' + fmt + '×' + fmt + ' · Single Elimination';
+    renderBracket();
+  }
+
+  function buildRow(m, side, ri) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const name = side === 1 ? m.p1 : m.p2;
+    const members = side === 1 ? m.p1m : m.p2m;
+    const other = side === 1 ? m.p2 : m.p1;
+    const bothExist = m.p1 && m.p2;
+
+    if (!name) row.classList.add(ri === 0 && other ? 'bye' : 'empty');
+    if (m.winner === side) row.classList.add('win');
+
+    const label = document.createElement('span');
+    label.className = 'name';
+    if (name) {
+      if (members && members.length >= 3) {
+        label.classList.add('multi');
+        members.forEach(mem => {
+          const span = document.createElement('span');
+          span.className = 'member';
+          span.textContent = mem;
+          label.appendChild(span);
+        });
+        label.title = members.join(' · ');
+      } else {
+        label.textContent = name;
+        if (members && members.length > 1) label.title = members.join(' · ');
+      }
+    } else if (ri === 0 && other) label.textContent = 'BYE';
+    else label.textContent = '—';
+    row.appendChild(label);
+
+    if (name && members && tournament) {
+      const team = tournament.teams.find(t => arraysEqual(t.members, members));
+      if (team) {
+        const edit = document.createElement('button');
+        edit.className = 'edit-btn';
+        edit.type = 'button';
+        edit.textContent = '✎';
+        edit.title = 'Заменить игрока';
+        edit.setAttribute('aria-label', 'Заменить игрока');
+        edit.addEventListener('click', e => {
+          e.stopPropagation();
+          openReplaceModal(team);
+        });
+        row.appendChild(edit);
+      }
+    }
+
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = m.winner === side ? '×' : '→';
+    row.appendChild(arrow);
+
+    if (name && bothExist) {
+      row.classList.add('clickable');
+      row.title = m.winner === side ? 'Клик — отменить выбор' : 'Клик — пройдёт дальше';
+      row.addEventListener('click', () => pickWinner(m, side));
+    }
+    return row;
+  }
+
+  function buildMatch(m, ri, delay, matchNumber) {
+    const el = document.createElement('div');
+    el.className = 'match';
+    if (delay !== undefined) {
+      el.classList.add('entering');
+      el.style.animationDelay = delay + 'ms';
+    }
+    const numLabel = document.createElement('span');
+    numLabel.className = 'match-label';
+    numLabel.textContent = 'M' + matchNumber;
+    el.appendChild(numLabel);
+    el.appendChild(buildRow(m, 1, ri));
+    el.appendChild(buildRow(m, 2, ri));
+
+    el.addEventListener('mousemove', e => {
+      const rect = el.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      el.style.setProperty('--spotlight-x', x + '%');
+      el.style.setProperty('--spotlight-y', y + '%');
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.setProperty('--spotlight-x', '50%');
+      el.style.setProperty('--spotlight-y', '50%');
+    });
+
+    return el;
+  }
+
+  function renderBracket() {
+    if (!tournament) return;
+    const R = tournament.rounds;
+    const bracket = $('rounds');
+    bracket.innerHTML = '<svg class="lines" id="lines"></svg>';
+    const animate = animateEntrance;
+    animateEntrance = false;
+    let matchCounter = 0;
+
+    R.forEach((round, ri) => {
+      const col = document.createElement('div');
+      col.className = 'round';
+
+      const title = document.createElement('div');
+      title.className = 'round-title';
+      const countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      countSpan.textContent = round.length + (round.length === 1 ? ' матч' : ' матча');
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = roundName(round);
+      title.appendChild(nameSpan);
+      title.appendChild(countSpan);
+      col.appendChild(title);
+
+      const body = document.createElement('div');
+      body.className = 'round-body';
+      round.forEach(m => {
+        const delay = animate ? matchCounter * 35 : undefined;
+        matchCounter++;
+        body.appendChild(buildMatch(m, ri, delay, matchCounter));
+      });
+      col.appendChild(body);
+      bracket.appendChild(col);
+    });
+
+    const fm = R[R.length - 1][0];
+    const champName = fm.winner ? (fm.winner === 1 ? fm.p1 : fm.p2) : null;
+    const champMembers = fm.winner ? (fm.winner === 1 ? fm.p1m : fm.p2m) : null;
+    const champIsMulti = !!(champName && champMembers && champMembers.length >= 3);
+
+    const champCol = document.createElement('div');
+    champCol.className = 'round champ-col';
+    const ct = document.createElement('div');
+    ct.className = 'round-title';
+    ct.textContent = 'Чемпион';
+    champCol.appendChild(ct);
+
+    const cbody = document.createElement('div');
+    cbody.className = 'round-body';
+    const card = document.createElement('div');
+    card.className = 'champion' + (champName ? ' has-champ' : '');
+    if (animate) {
+      card.style.animation = 'matchIn 0.6s cubic-bezier(0.16,1,0.3,1) backwards';
+      card.style.animationDelay = (matchCounter * 35 + 100) + 'ms';
+    }
+    let champNameHtml;
+    if (champIsMulti) {
+      champNameHtml = champMembers.map(m => '<span class="member">' + esc(m) + '</span>').join('');
+    } else {
+      champNameHtml = champName ? esc(champName) : '—';
+    }
+    card.innerHTML =
+      '<div class="label">Победитель</div>' +
+      '<div class="name' + (champIsMulti ? ' multi' : '') + '">' + champNameHtml + '</div>';
+    cbody.appendChild(card);
+    champCol.appendChild(cbody);
+    bracket.appendChild(champCol);
+
+    syncFeed();
+    requestAnimationFrame(drawLines);
+  }
+
+  function syncFeed() {
+    const feed = $('feed');
+    if (!feed || !tournament) return;
+    const expected = new Set();
+    tournament.rounds.forEach((round, ri) => {
+      round.forEach((m, mi) => {
+        if (!m.winner) return;
+        const id = 'r' + ri + 'm' + mi;
+        expected.add(id);
+        const winner = m.winner === 1 ? m.p1 : m.p2;
+        const loser = m.winner === 1 ? m.p2 : m.p1;
+        const html =
+          '<div class="feed-main">' +
+            '<span class="feed-winner">' + esc(winner) + '</span>' +
+            '<span class="feed-arrow">→</span>' +
+          '</div>' +
+          '<div class="feed-meta">' + roundName(round) + (loser ? ' · над ' + esc(loser) : ' · без соперника') + '</div>';
+        let el = feed.querySelector('[data-mid="' + id + '"]');
+        if (!el) {
+          el = document.createElement('div');
+          el.className = 'feed-item';
+          el.dataset.mid = id;
+          el.innerHTML = html;
+          feed.insertBefore(el, feed.firstChild);
+        } else if (el._html !== html) {
+          el.innerHTML = html;
+          el._html = html;
+        }
+        if (!el._html) el._html = html;
+      });
+    });
+    Array.from(feed.querySelectorAll('.feed-item')).forEach(el => {
+      if (!expected.has(el.dataset.mid)) el.remove();
+    });
+    const hasItems = !!feed.querySelector('.feed-item');
+    const empty = feed.querySelector('.feed-empty');
+    if (!hasItems && !empty) feed.insertAdjacentHTML('beforeend', '<div class="feed-empty">Пока нет завершённых матчей</div>');
+    else if (hasItems && empty) empty.remove();
+  }
+
+  function drawLines() {
+    const bracket = $('rounds');
+    const svg = $('lines');
+    if (!bracket || !svg) return;
+    const br = bracket.getBoundingClientRect();
+    const W = bracket.offsetWidth, H = bracket.offsetHeight;
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const cols = Array.from(bracket.querySelectorAll('.round'));
+    let d = '';
+    for (let r = 0; r < cols.length - 1; r++) {
+      const ms = cols[r].querySelectorAll('.match');
+      const nextMs = cols[r + 1].querySelectorAll('.match, .champion');
+      ms.forEach((el, i) => {
+        const parent = nextMs[Math.floor(i / 2)];
+        if (!parent) return;
+        const a = el.getBoundingClientRect();
+        const b = parent.getBoundingClientRect();
+        const x1 = a.right - br.left;
+        const y1 = a.top + a.height / 2 - br.top;
+        const x2 = b.left - br.left;
+        const y2 = b.top + b.height / 2 - br.top;
+        const mx = (x1 + x2) / 2;
+        d += 'M' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' H' + mx.toFixed(1) + ' V' + y2.toFixed(1) + ' H' + x2.toFixed(1) + ' ';
+      });
+    }
+    svg.innerHTML = '<path d="' + d + '" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-linejoin="round"/>';
+  }
+
+  $('resetBtn').addEventListener('click', () => {
+    if (!tournament) return;
+    if (!confirm('Сбросить все результаты?')) return;
+    tournament.rounds.forEach(round => round.forEach(m => { m.winner = null; }));
+    for (let ri = 1; ri < tournament.rounds.length; ri++) {
+      tournament.rounds[ri].forEach(m => { m.p1 = null; m.p1m = null; m.p2 = null; m.p2m = null; });
+    }
+    $('feed').innerHTML = '<div class="feed-empty">Пока нет завершённых матчей</div>';
+    propagate(); saveState(); renderBracket();
+  });
+
+  $('newTournBtn').addEventListener('click', () => {
+    if (!tournament) return;
+    if (!confirm('Удалить текущий турнир и вернуться к настройкам?')) return;
+    tournament = null;
+    saveState();
+    updateHeader();
+    controlsCollapsed = false;
+    applyControlsState();
+    renderBracketView();
+    renderTournamentSection();
+  });
+
+  window.addEventListener('resize', () => {
+    if (tournament && !$('bracketView').hidden) drawLines();
+  });
+
+  initMeteors();
+  loadState();
+  updateHeader();
+  applyControlsState();
+  applyFormatUI();
+  applyMaxUI();
+  renderTournamentSection();
+  renderPlayersSection();
+  renderTwitchSection();
+  renderBracketView();
+})();
+</script>
+</body>
+</html>
