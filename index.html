@@ -543,76 +543,6 @@
   .lines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
   .lines path { stroke: rgba(255,255,255,.12); stroke-width: 1; fill: none; }
 
-  /* ===== UPPER GRAND FINAL ===== */
-  .upper-grand-final {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 28px;
-    flex-wrap: wrap;
-    padding: 4px 0 40px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--glass-border);
-    position: relative;
-    z-index: 2;
-    animation: ugfIn .7s cubic-bezier(.16,1,.3,1) backwards;
-  }
-  .upper-grand-final[hidden] { display: none; }
-  @keyframes ugfIn {
-    from { opacity: 0; transform: translateY(-16px); }
-    to { opacity: 1; transform: none; }
-  }
-  .ugf-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 18px;
-    border: 1px solid rgba(255,214,102,0.35);
-    background: linear-gradient(135deg, rgba(255,214,102,0.1), rgba(255,214,102,0.02));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 4px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: rgba(255,214,102,0.95);
-    white-space: nowrap;
-    text-shadow: 0 0 12px rgba(255,214,102,0.35);
-    box-shadow: 0 0 24px rgba(255,214,102,0.08), inset 0 1px 0 rgba(255,214,102,0.12);
-  }
-  .ugf-badge::before {
-    content: '★';
-    font-size: 14px;
-    filter: drop-shadow(0 0 6px rgba(255,214,102,0.85));
-    letter-spacing: 0;
-  }
-  .ugf-match-wrap {
-    width: 340px;
-    max-width: 100%;
-    flex: 0 0 auto;
-    position: relative;
-  }
-  .ugf-match-wrap .match {
-    background: rgba(28,26,20,0.7);
-    border: 1px solid rgba(255,214,102,0.35);
-    box-shadow: 0 0 0 1px rgba(255,214,102,0.08), 0 8px 32px rgba(0,0,0,.55), 0 0 60px rgba(255,214,102,0.06);
-  }
-  .ugf-match-wrap .match:hover {
-    border-color: rgba(255,214,102,0.6);
-    box-shadow: 0 0 0 1px rgba(255,214,102,0.16), 0 16px 48px rgba(0,0,0,.65), 0 0 80px rgba(255,214,102,0.12);
-  }
-  .ugf-match-wrap .match-label {
-    color: rgba(255,214,102,0.55);
-  }
-  .ugf-match-wrap .row.win {
-    background: linear-gradient(90deg, rgba(255,214,102,0.9), rgba(255,240,190,0.92));
-    color: #0a0a0a;
-  }
-  .ugf-match-wrap .row.win .name,
-  .ugf-match-wrap .row.win .name.multi .member { color: #0a0a0a; }
-
   .round { display: flex; flex-direction: column; min-width: 260px; position: relative; z-index: 1; }
   .round-title {
     font-family: var(--display); font-size: 13px; font-weight: 500;
@@ -707,8 +637,31 @@
   .row.drop-ok { outline: 2px dashed rgba(255,255,255,.5); outline-offset: -3px; background: rgba(255,255,255,.06); }
   .row.drop-bad { outline: 2px dashed rgba(255,107,107,.6); outline-offset: -3px; }
 
+  /* ===== GRAND FINAL COLUMN (inside upper bracket) ===== */
+  .gf-col .round-title {
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(255,214,102,0.35);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .gf-col .match {
+    background: rgba(28,26,20,0.72);
+    border: 1px solid rgba(255,214,102,0.35);
+    box-shadow: 0 0 0 1px rgba(255,214,102,0.08), 0 8px 32px rgba(0,0,0,.55), 0 0 60px rgba(255,214,102,0.06);
+  }
+  .gf-col .match:hover {
+    border-color: rgba(255,214,102,0.6);
+    box-shadow: 0 0 0 1px rgba(255,214,102,0.16), 0 16px 48px rgba(0,0,0,.65), 0 0 80px rgba(255,214,102,0.12);
+  }
+  .gf-col .match-label { color: rgba(255,214,102,0.55); }
+  .gf-col .row.win {
+    background: linear-gradient(90deg, rgba(255,214,102,0.92), rgba(255,240,190,0.94));
+    color: #0a0a0a;
+  }
+  .gf-col .row.win .name,
+  .gf-col .row.win .name.multi .member { color: #0a0a0a; }
+
   .champ-col { min-width: 250px; }
-  .lower-champ-col { min-width: 250px; }
   .champion {
     border: 1px solid var(--glass-border); padding: 40px 22px; text-align: center;
     transition: all .45s cubic-bezier(.16,1,.3,1);
@@ -868,9 +821,6 @@
     .bracket-scroll { padding: 28px 24px 28px 40px; max-height: calc(100vh - 200px); }
     .bracket { gap: 64px; }
     .round { min-width: 220px; }
-    .upper-grand-final { gap: 16px; padding-bottom: 28px; margin-bottom: 28px; }
-    .ugf-match-wrap { width: 100%; max-width: 320px; }
-    .ugf-badge { font-size: 10px; padding: 8px 14px; }
     .flux-lines-bg { display: none; }
     .intro-screen::after { inset: 16px; }
     .intro-corner { display: none; }
@@ -1072,15 +1022,10 @@
       </div>
     </div>
     <div class="bracket-hint">
-      Клик по игроку — проходит дальше. Повторный клик — отмена (откатывает и верхнюю, и нижнюю сетку). <kbd>✎</kbd> — заменить игрока. <kbd>⇄</kbd> — переместить игрока. Drag&amp;Drop — поменять команды местами.
+      Клик по игроку — проходит дальше. Повторный клик — отмена (откатывает и верхнюю, и нижнюю сетку). <kbd>✎</kbd> — заменить игрока. <kbd>⇄</kbd> — переместить игрока. Drag&amp;Drop — поменять команды местами (только в пределах одного раунда).
     </div>
     <div class="tournament-layout">
       <div class="bracket-scroll">
-        <!-- ★ GRAND FINAL AT TOP (only in DE mode) ★ -->
-        <div class="upper-grand-final" id="upperGrandFinal" hidden>
-          <div class="ugf-badge">GRAND FINAL</div>
-          <div class="ugf-match-wrap" id="ugfMatchWrap"></div>
-        </div>
         <div class="bracket" id="rounds"></div>
         <div class="lower-bracket-wrapper" id="lowerBracketWrapper" hidden>
           <div class="bracket-divider"><span>LOWER BRACKET · DOUBLE ELIMINATION</span></div>
@@ -1434,8 +1379,17 @@ void main() {
   }
 
   function pushUndo(label) {
-    if (!tournament) return;
-    try { undoStack.push({ label: label || 'Действие', snapshot: JSON.parse(JSON.stringify(tournament)), ts: Date.now() }); if (undoStack.length > 25) undoStack.shift(); saveUndo(); syncUndoBtn(); } catch (e) {}
+    // Keep null snapshots too: this makes the initial tournament creation undoable.
+    try {
+      undoStack.push({
+        label: label || 'Действие',
+        snapshot: tournament ? JSON.parse(JSON.stringify(tournament)) : null,
+        ts: Date.now()
+      });
+      if (undoStack.length > 25) undoStack.shift();
+      saveUndo();
+      syncUndoBtn();
+    } catch (e) { console.warn('Не удалось сохранить шаг Undo:', e); }
   }
   function saveUndo() { try { localStorage.setItem(LS_UNDO, JSON.stringify(undoStack)); } catch (e) {} }
   function loadUndo() { try { const raw = localStorage.getItem(LS_UNDO); undoStack = raw ? JSON.parse(raw) || [] : []; } catch (e) { undoStack = []; } }
@@ -1942,17 +1896,43 @@ void main() {
     const idx = fromTeam.members.indexOf(playerName);
     if (idx === -1) { $('pmError').textContent = 'Игрок не найден в исходной команде'; return; }
     pushUndo('Перемещение игрока');
-    const oldMembers = fromTeam.members.slice(); const oldName = fromTeam.name;
-    fromTeam.members.splice(idx, 1); selectedTeam.members.push(playerName);
-    fromTeam.name = teamDisplayName(fromTeam.members); selectedTeam.name = teamDisplayName(selectedTeam.members);
-    const replaceMembers = (holder, oldM, newM, newName) => {
-      if (holder.p1m && arraysEqual(holder.p1m, oldM)) { holder.p1m = newM; holder.p1 = newName; }
-      if (holder.p2m && arraysEqual(holder.p2m, oldM)) { holder.p2m = newM; holder.p2 = newName; }
+    const oldFromRef = fromTeam.members;
+    const oldToRef = selectedTeam.members;
+    const oldFromMembers = oldFromRef.slice();
+    const oldToMembers = oldToRef.slice();
+    const oldName = fromTeam.name;
+
+    fromTeam.members.splice(idx, 1);
+    selectedTeam.members.push(playerName);
+    fromTeam.name = teamDisplayName(fromTeam.members);
+    selectedTeam.name = teamDisplayName(selectedTeam.members);
+
+    // Update every stored match slot for BOTH teams. Otherwise the roster in
+    // later rounds can keep showing the old lineup after a player is moved.
+    const updateTeamSnapshot = (holder, oldMembers, oldRef, newMembers, newName) => {
+      if (holder.p1m && (holder.p1m === oldRef || arraysEqual(holder.p1m, oldMembers))) {
+        holder.p1m = newMembers.length ? newMembers.slice() : null;
+        holder.p1 = newMembers.length ? newName : null;
+        if (!holder.p1) holder.winner = null;
+      }
+      if (holder.p2m && (holder.p2m === oldRef || arraysEqual(holder.p2m, oldMembers))) {
+        holder.p2m = newMembers.length ? newMembers.slice() : null;
+        holder.p2 = newMembers.length ? newName : null;
+        if (!holder.p2) holder.winner = null;
+      }
     };
-    tournament.rounds.forEach(r => r.forEach(m => replaceMembers(m, oldMembers, fromTeam.members, fromTeam.name)));
-    if (tournament.lowerRounds) tournament.lowerRounds.forEach(r => r.forEach(m => replaceMembers(m, oldMembers, fromTeam.members, fromTeam.name)));
-    if (tournament.grandFinal) replaceMembers(tournament.grandFinal, oldMembers, fromTeam.members, fromTeam.name);
-    if (fromTeam.members.length === 0) { const remove = confirm('Команда «' + (oldName || '—') + '» стала пустой. Удалить её из турнира?'); if (remove) tournament.teams = tournament.teams.filter(t => t !== fromTeam); }
+    const updateAllSnapshots = (oldMembers, oldRef, newMembers, newName) => {
+      tournament.rounds.forEach(r => r.forEach(m => updateTeamSnapshot(m, oldMembers, oldRef, newMembers, newName)));
+      if (tournament.lowerRounds) tournament.lowerRounds.forEach(r => r.forEach(m => updateTeamSnapshot(m, oldMembers, oldRef, newMembers, newName)));
+      if (tournament.grandFinal) updateTeamSnapshot(tournament.grandFinal, oldMembers, oldRef, newMembers, newName);
+    };
+    updateAllSnapshots(oldFromMembers, oldFromRef, fromTeam.members, fromTeam.name);
+    updateAllSnapshots(oldToMembers, oldToRef, selectedTeam.members, selectedTeam.name);
+
+    if (fromTeam.members.length === 0) {
+      const remove = confirm('Команда «' + (oldName || '—') + '» стала пустой. Удалить её из турнира?');
+      if (remove) tournament.teams = tournament.teams.filter(t => t !== fromTeam);
+    }
     propagate(); saveState(); closePlayerMoveModal(); renderBracket(); toast('Игрок перемещён');
   }
   $('pmCancel').addEventListener('click', closePlayerMoveModal);
@@ -1960,6 +1940,8 @@ void main() {
   $('playerMoveModal').addEventListener('click', e => { if (e.target === $('playerMoveModal')) closePlayerMoveModal(); });
 
   let _dragSrc = null;
+  let _isDragging = false; // Флаг для предотвращения случайного клика после Drag&Drop
+
   function getMatchBySlot(slot) {
     if (!tournament) return null;
     if (slot.bracket === 'U') return tournament.rounds[slot.round]?.[slot.match];
@@ -1968,20 +1950,59 @@ void main() {
     return null;
   }
   function slotHasPlayed(slot) { const m = getMatchBySlot(slot); return !!(m && m.winner && m.p1 && m.p2); }
+
   function attachDragHandlers(rowEl, slot) {
     if (!rowEl) return;
     rowEl.classList.add('draggable'); rowEl.draggable = true;
+    
     rowEl.addEventListener('dragstart', e => {
-      const m = getMatchBySlot(slot); if (!m || !(m.p1 || m.p2)) { e.preventDefault(); return; }
-      _dragSrc = slot; rowEl.classList.add('dragging');
+      const m = getMatchBySlot(slot);
+      const hasTeam = slot.side === 1 ? m?.p1 : m?.p2;
+      // Запрещаем тащить пустые слоты
+      if (!hasTeam) { e.preventDefault(); return; }
+      
+      _dragSrc = slot; 
+      _isDragging = true;
+      rowEl.classList.add('dragging');
       try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'team'); } catch (er) {}
     });
-    rowEl.addEventListener('dragend', () => { _dragSrc = null; document.querySelectorAll('.row.drop-ok, .row.drop-bad').forEach(el => el.classList.remove('drop-ok', 'drop-bad')); });
-    rowEl.addEventListener('dragover', e => { if (!_dragSrc) return; if (_dragSrc.bracket !== slot.bracket) { try { e.dataTransfer.dropEffect = 'none'; } catch (er) {} return; } e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch (er) {} });
-    rowEl.addEventListener('dragenter', e => { if (!_dragSrc || _dragSrc.bracket !== slot.bracket) return; const ok = !slotHasPlayed(slot) && !slotHasPlayed(_dragSrc); rowEl.classList.add(ok ? 'drop-ok' : 'drop-bad'); });
+    
+    rowEl.addEventListener('dragend', () => { 
+      _dragSrc = null; 
+      // Небольшая задержка, чтобы клик после drop не сработал
+      setTimeout(() => { _isDragging = false; }, 150); 
+      document.querySelectorAll('.row.drop-ok, .row.drop-bad').forEach(el => el.classList.remove('drop-ok', 'drop-bad')); 
+    });
+    
+    rowEl.addEventListener('dragover', e => { 
+      if (!_dragSrc) return; 
+      // Разрешаем перемещение только внутри одного раунда, чтобы не ломать логику распространения
+      if (_dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) { 
+        try { e.dataTransfer.dropEffect = 'none'; } catch (er) {} 
+        return; 
+      } 
+      e.preventDefault(); 
+      try { e.dataTransfer.dropEffect = 'move'; } catch (er) {} 
+    });
+    
+    rowEl.addEventListener('dragenter', e => { 
+      if (!_dragSrc || _dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) return; 
+      const ok = !slotHasPlayed(slot) && !slotHasPlayed(_dragSrc); 
+      rowEl.classList.add(ok ? 'drop-ok' : 'drop-bad'); 
+    });
+    
     rowEl.addEventListener('dragleave', () => { rowEl.classList.remove('drop-ok', 'drop-bad'); });
-    rowEl.addEventListener('drop', e => { e.preventDefault(); rowEl.classList.remove('drop-ok', 'drop-bad'); if (!_dragSrc) return; if (_dragSrc.bracket !== slot.bracket) return; swapTeamSlots(_dragSrc, slot); _dragSrc = null; });
+    
+    rowEl.addEventListener('drop', e => { 
+      e.preventDefault(); 
+      rowEl.classList.remove('drop-ok', 'drop-bad'); 
+      if (!_dragSrc) return; 
+      if (_dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) return; 
+      swapTeamSlots(_dragSrc, slot); 
+      _dragSrc = null; 
+    });
   }
+
   function swapTeamSlots(a, b) {
     if (!tournament) return;
     if (a.bracket === b.bracket && a.round === b.round && a.match === b.match && a.side === b.side) return;
@@ -2043,7 +2064,11 @@ void main() {
     if (name && bothExist) {
       row.classList.add('clickable');
       row.title = m.winner === side ? 'Клик — отменить выбор' : 'Клик — пройдёт дальше';
-      row.addEventListener('click', () => pickWinner(m, side));
+      row.addEventListener('click', () => {
+        // Защита от срабатывания клика сразу после Drag&Drop
+        if (_isDragging) return; 
+        pickWinner(m, side);
+      });
     }
     if (slot) attachDragHandlers(row, slot);
     return row;
@@ -2077,7 +2102,7 @@ void main() {
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
     svg.style.width = w + 'px'; svg.style.height = h + 'px';
     const roundEls = Array.from(container.children).filter(el =>
-      el.classList.contains('round') && !el.classList.contains('champ-col') && !el.classList.contains('lower-champ-col')
+      el.classList.contains('round') && !el.classList.contains('champ-col')
     );
     const matches = roundEls.map(rEl => Array.from(rEl.querySelectorAll(':scope > .round-body > .match')));
     let html = '';
@@ -2085,34 +2110,27 @@ void main() {
       const cur = matches[ri]; const nxt = matches[ri + 1];
       for (let i = 0; i < nxt.length; i++) {
         const a = cur[i * 2], b = cur[i * 2 + 1], c = nxt[i];
-        if (!a || !b || !c) continue;
-        const aR = a.getBoundingClientRect(); const bR = b.getBoundingClientRect(); const cR = c.getBoundingClientRect();
-        const aX = aR.right - baseRect.left; const aY = aR.top - baseRect.top + aR.height / 2;
-        const bX = bR.right - baseRect.left; const bY = bR.top - baseRect.top + bR.height / 2;
+        if (!c) continue;
+        const cR = c.getBoundingClientRect();
         const cX = cR.left - baseRect.left; const cY = cR.top - baseRect.top + cR.height / 2;
-        const midX = (aX + cX) / 2;
-        html += `<path d="M ${aX} ${aY} H ${midX} V ${cY} H ${cX}"/>`;
-        html += `<path d="M ${bX} ${bY} H ${midX} V ${cY}"/>`;
+        if (a && b) {
+          const aR = a.getBoundingClientRect(); const bR = b.getBoundingClientRect();
+          const aX = aR.right - baseRect.left; const aY = aR.top - baseRect.top + aR.height / 2;
+          const bX = bR.right - baseRect.left; const bY = bR.top - baseRect.top + bR.height / 2;
+          const midX = (aX + cX) / 2;
+          html += `<path d="M ${aX} ${aY} H ${midX} V ${cY} H ${cX}"/>`;
+          html += `<path d="M ${bX} ${bY} H ${midX} V ${cY}"/>`;
+        } else if (a && !b) {
+          const aR = a.getBoundingClientRect();
+          const aX = aR.right - baseRect.left; const aY = aR.top - baseRect.top + aR.height / 2;
+          const midX = (aX + cX) / 2;
+          html += `<path d="M ${aX} ${aY} H ${midX} V ${cY} H ${cX}" style="stroke: rgba(255,214,102,0.35);"/>`;
+        }
       }
     }
     svg.innerHTML = html;
   }
 
-  // ★ NEW: Grand Final render at top of upper bracket
-  function renderUpperGrandFinal() {
-    const wrap = $('upperGrandFinal');
-    const container = $('ugfMatchWrap');
-    if (!wrap || !container) return;
-    const showGF = !!(tournament && tournament.mode === 'DE' && tournament.grandFinal);
-    wrap.hidden = !showGF;
-    container.innerHTML = '';
-    if (!showGF) return;
-    container.appendChild(buildMatch(tournament.grandFinal, -1, undefined, 1, {
-      bracket: 'G', round: 0, match: 0
-    }));
-  }
-
-  // Lower bracket now renders ONLY lower rounds — GF moved to top of upper bracket
   function renderLowerBracket() {
     const wrapper = $('lowerBracketWrapper'); const lb = $('lowerBracket');
     if (!wrapper || !lb) return;
@@ -2149,15 +2167,12 @@ void main() {
 
   function renderBracket() {
     if (!tournament) return;
-
-    // Grand Final at top (only in DE mode) — render BEFORE main rounds
-    renderUpperGrandFinal();
-
     const R = tournament.rounds;
     const bracket = $('rounds');
     bracket.innerHTML = '<svg class="lines" id="lines"></svg>';
     const animate = animateEntrance;
     let matchCounter = 1;
+
     R.forEach((round, ri) => {
       const roundEl = document.createElement('div'); roundEl.className = 'round';
       const title = document.createElement('div'); title.className = 'round-title';
@@ -2171,6 +2186,23 @@ void main() {
       });
       roundEl.appendChild(body); bracket.appendChild(roundEl);
     });
+
+    if (tournament.mode === 'DE' && tournament.grandFinal) {
+      const gfCol = document.createElement('div');
+      gfCol.className = 'round gf-col';
+      const gfTitle = document.createElement('div');
+      gfTitle.className = 'round-title';
+      gfTitle.innerHTML = 'GRAND FINAL';
+      gfCol.appendChild(gfTitle);
+      const gfBody = document.createElement('div');
+      gfBody.className = 'round-body';
+      gfBody.appendChild(buildMatch(tournament.grandFinal, -1, undefined, 1, {
+        bracket: 'G', round: 0, match: 0
+      }));
+      gfCol.appendChild(gfBody);
+      bracket.appendChild(gfCol);
+    }
+
     const champCol = document.createElement('div'); champCol.className = 'round champ-col';
     const champTitle = document.createElement('div'); champTitle.className = 'round-title'; champTitle.textContent = 'Чемпион';
     champCol.appendChild(champTitle);
