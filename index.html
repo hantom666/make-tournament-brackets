@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CS2 Bracket — Турниры</title>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('cs2_theme_v1');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+    if (localStorage.getItem('cs2_flux_v1') === '0') document.documentElement.classList.add('flux-off');
+  } catch (e) {}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -78,6 +87,11 @@
     letter-spacing: -.03em; text-transform: uppercase; margin: 0;
     text-align: center; display: flex; flex-direction: column;
     align-items: center; gap: .02em;
+    animation: introFloat 7s ease-in-out infinite;
+  }
+  @keyframes introFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
   }
   .intro-line {
     display: block; white-space: nowrap;
@@ -177,20 +191,21 @@
   }
   .liquid-bg {
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    overflow: hidden; background: #050505;
+    overflow: hidden;
   }
+  .liquid-bg { background: var(--bg); }
   .liquid-bg::before, .liquid-bg::after {
     content: ''; position: absolute; border-radius: 50%;
     filter: blur(140px); opacity: .4; will-change: transform;
   }
   .liquid-bg::before {
     width: 70vw; height: 70vw;
-    background: radial-gradient(circle, rgba(90,90,90,.5) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--blob-a, rgba(90,90,90,.5)) 0%, transparent 70%);
     top: -25%; left: -15%; animation: blob1 20s ease-in-out infinite alternate;
   }
   .liquid-bg::after {
     width: 60vw; height: 60vw;
-    background: radial-gradient(circle, rgba(60,60,60,.6) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--blob-b, rgba(60,60,60,.6)) 0%, transparent 70%);
     bottom: -20%; right: -15%; animation: blob2 24s ease-in-out infinite alternate;
   }
   @keyframes blob1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(12%,18%) scale(1.2); } }
@@ -204,6 +219,7 @@
   @keyframes flux-fade-in { from { opacity: 0; } to { opacity: .5; } }
   .flux-lines-bg canvas { display: block; width: 100%; height: 100%; }
   body.intro-active .flux-lines-bg { opacity: .95; -webkit-mask-image: none; mask-image: none; animation: none; }
+  html.flux-off .flux-lines-bg { display: none !important; }
 
   main { position: relative; z-index: 1; }
   header { position: relative; z-index: 2; }
@@ -304,6 +320,197 @@
   .btn-toggle .chev { font-size: 10px; transition: transform .3s cubic-bezier(.16,1,.3,1); color: var(--fg-muted); }
   .btn-toggle.open .chev { transform: rotate(180deg); }
 
+  .mini-btn {
+    position: relative; overflow: hidden;
+    width: 34px; height: 34px; padding: 0; flex: none;
+    display: inline-grid; place-items: center;
+    background: rgba(255,255,255,.04);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--glass-border); border-radius: 6px;
+    color: var(--fg-muted); cursor: pointer;
+    transition: background .25s, border-color .25s, color .25s, transform .25s, box-shadow .3s;
+  }
+  .mini-btn:hover {
+    background: rgba(255,255,255,.09); border-color: var(--border-hi);
+    color: var(--fg); transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  .mini-btn:active { transform: translateY(1px) scale(.97); }
+  .mini-btn svg { width: 16px; height: 16px; display: block; }
+  .mini-btn[aria-pressed="false"] { color: var(--fg-dim); }
+  .mini-btn.off::after {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 22px; height: 1.5px; border-radius: 1px;
+    background: currentColor; opacity: .85;
+    transform: translate(-50%,-50%) rotate(-45deg);
+  }
+
+  .theme-pop {
+    position: fixed; left: 0; top: 0;
+    width: 268px; padding: 14px; z-index: 400;
+    background: rgba(14,14,14,.84);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid var(--glass-border); border-radius: 8px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.78), inset 0 1px 0 rgba(255,255,255,.06);
+    animation: themePopIn .22s cubic-bezier(.16,1,.3,1);
+  }
+  .theme-pop[hidden] { display: none; }
+  @keyframes themePopIn {
+    from { opacity: 0; transform: translateY(-6px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+  }
+  .theme-pop-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--fg-dim);
+    margin-bottom: 12px; padding: 0 2px;
+  }
+  .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .theme-swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    padding: 10px 6px 8px; border-radius: 6px; cursor: pointer;
+    background: rgba(255,255,255,.03); border: 1px solid var(--glass-border);
+    transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .theme-swatch:hover {
+    background: rgba(255,255,255,.07); border-color: var(--border-hi);
+    transform: translateY(-1px);
+  }
+  .theme-swatch.active {
+    border-color: rgba(255,255,255,.55);
+    background: rgba(255,255,255,.10);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .sw-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: conic-gradient(from 210deg, var(--c1), var(--c2), var(--c3), var(--c1));
+    border: 1px solid rgba(255,255,255,.18);
+    box-shadow: inset 0 0 10px rgba(0,0,0,.35);
+  }
+  .sw-name { font-size: 10.5px; font-weight: 500; color: var(--fg-muted); letter-spacing: .02em; }
+  .theme-swatch.active .sw-name { color: var(--fg); }
+
+  /* ==== Flux panel CSS ==== */
+  .flux-pop {
+    position: fixed; left: 0; top: 0; width: 300px; padding: 14px; z-index: 400;
+    background: rgba(14,14,14,.86);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid var(--glass-border); border-radius: 8px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.78), inset 0 1px 0 rgba(255,255,255,.06);
+    animation: themePopIn .22s cubic-bezier(.16,1,.3,1);
+    max-height: min(80vh, 640px); overflow-y: auto;
+  }
+  .flux-pop[hidden] { display: none; }
+  .flux-pop::-webkit-scrollbar { width: 6px; }
+  .flux-pop::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 3px; }
+  .fp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 2px; }
+  .fp-title { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--fg-dim); }
+  .fp-reset {
+    background: none; border: none; color: var(--fg-muted); cursor: pointer;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 6px; border-radius: 4px; transition: color .2s, background .2s;
+  }
+  .fp-reset:hover { color: var(--fg); background: rgba(255,255,255,.07); }
+  .fp-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 11px; }
+  .fp-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .fp-label { font-size: 11.5px; color: var(--fg-muted); font-weight: 500; }
+  .fp-val { font-family: var(--mono); font-size: 10.5px; color: var(--fg); font-variant-numeric: tabular-nums; }
+  input[type=range].fp-range {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 3px;
+    border-radius: 2px; background: rgba(255,255,255,.14); outline: none; cursor: pointer;
+  }
+  input[type=range].fp-range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; border: none; cursor: grab;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 10px rgba(255,255,255,.35);
+  }
+  input[type=range].fp-range::-moz-range-thumb {
+    width: 12px; height: 12px; border: none; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.45);
+  }
+  .fp-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+  .fp-toggle {
+    display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 5px;
+    border: 1px solid var(--glass-border); background: rgba(255,255,255,.03);
+    font-size: 11.5px; color: var(--fg-muted); cursor: pointer; user-select: none;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .fp-toggle:hover { border-color: var(--border-hi); color: var(--fg); }
+  .fp-toggle.on { color: var(--fg); border-color: var(--border-hi); background: rgba(255,255,255,.06); }
+  .fp-toggle input {
+    appearance: none; -webkit-appearance: none; width: 12px; height: 12px; flex: none; margin: 0;
+    border-radius: 3px; border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,.03); position: relative; cursor: pointer;
+  }
+  .fp-toggle input:checked { background: #fff; border-color: #fff; }
+  .fp-toggle input:checked::after {
+    content: ''; position: absolute; left: 3px; top: 0px;
+    width: 3px; height: 6px; border: solid #0a0a0a; border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .fp-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; }
+  .fp-seg button {
+    padding: 7px 0; border-radius: 5px; border: 1px solid var(--glass-border);
+    background: rgba(5,5,5,.4); color: var(--fg-muted); font-size: 12px; cursor: pointer;
+    transition: all .2s;
+  }
+  .fp-seg button:hover { border-color: var(--border-hi); color: var(--fg); }
+  .fp-seg button.active { background: #fff; color: #0a0a0a; border-color: #fff; font-weight: 600; }
+  .fp-colors { display: flex; gap: 8px; }
+  .fp-color { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+  .fp-color input[type=color] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 26px;
+    border-radius: 5px; border: 1px solid var(--glass-border);
+    background: transparent; cursor: pointer; padding: 0;
+  }
+  .fp-color input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+  .fp-color input[type=color]::-webkit-color-swatch { border: none; border-radius: 3px; }
+  .fp-color span { font-family: var(--mono); font-size: 9.5px; color: var(--fg-dim); }
+  .fp-section { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-dim); margin: 4px 0 8px; }
+
+  :root[data-theme="emerald"] {
+    --bg: #040d09; --bg-soft: #061410; --bg-elevated: #0a1c15;
+    --card: rgba(16,38,29,.55); --card-hi: rgba(24,54,41,.72);
+    --fg: #eafff5; --fg-muted: #90b8a6; --fg-dim: #4d6f60;
+    --border: rgba(120,255,190,.09); --border-hi: rgba(120,255,190,.20);
+    --border-active: rgba(120,255,190,.40); --glass-border: rgba(120,255,190,.11);
+    --blob-a: rgba(40,160,110,.28); --blob-b: rgba(20,100,75,.40);
+  }
+  :root[data-theme="crimson"] {
+    --bg: #0e0507; --bg-soft: #150709; --bg-elevated: #1c0a0d;
+    --card: rgba(46,16,22,.55); --card-hi: rgba(62,22,30,.72);
+    --fg: #fff0f2; --fg-muted: #c39aa2; --fg-dim: #7a4f58;
+    --border: rgba(255,120,150,.09); --border-hi: rgba(255,120,150,.20);
+    --border-active: rgba(255,120,150,.40); --glass-border: rgba(255,120,150,.11);
+    --blob-a: rgba(160,40,70,.30); --blob-b: rgba(110,20,50,.40);
+  }
+  :root[data-theme="ocean"] {
+    --bg: #030a12; --bg-soft: #05101a; --bg-elevated: #081724;
+    --card: rgba(12,32,52,.55); --card-hi: rgba(18,46,74,.72);
+    --fg: #e8f6ff; --fg-muted: #8fb0cc; --fg-dim: #4a6a86;
+    --border: rgba(110,190,255,.09); --border-hi: rgba(110,190,255,.20);
+    --border-active: rgba(110,190,255,.40); --glass-border: rgba(110,190,255,.11);
+    --blob-a: rgba(30,110,180,.30); --blob-b: rgba(20,70,140,.40);
+  }
+  :root[data-theme="amber"] {
+    --bg: #0c0803; --bg-soft: #120d05; --bg-elevated: #1a1208;
+    --card: rgba(44,32,14,.55); --card-hi: rgba(60,44,20,.72);
+    --fg: #fff7e8; --fg-muted: #c2aa86; --fg-dim: #7d6644;
+    --border: rgba(255,200,110,.09); --border-hi: rgba(255,200,110,.20);
+    --border-active: rgba(255,200,110,.40); --glass-border: rgba(255,200,110,.11);
+    --blob-a: rgba(170,120,30,.28); --blob-b: rgba(120,80,15,.38);
+  }
+  :root[data-theme="violet"] {
+    --bg: #08040e; --bg-soft: #0e0716; --bg-elevated: #150a20;
+    --card: rgba(34,18,52,.55); --card-hi: rgba(48,26,72,.72);
+    --fg: #f5edff; --fg-muted: #b39bc9; --fg-dim: #6d5488;
+    --border: rgba(190,140,255,.09); --border-hi: rgba(190,140,255,.20);
+    --border-active: rgba(190,140,255,.40); --glass-border: rgba(190,140,255,.11);
+    --blob-a: rgba(110,50,180,.28); --blob-b: rgba(70,25,130,.40);
+  }
+
   .controls {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
     border-bottom: 1px solid var(--glass-border);
@@ -362,7 +569,7 @@
   .btn-sm.danger:hover:not(:disabled) { background: var(--danger-dim); border-color: rgba(255,107,107,.5); color: #ff8a8a; }
 
   .format-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
-  .max-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+  .max-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; }
   .seg-btn {
     padding: 8px 4px; border: 1px solid var(--glass-border);
     background: rgba(5,5,5,.4);
@@ -418,7 +625,12 @@
   .check:has(input:disabled) { opacity: .5; cursor: not-allowed; }
 
   .pool-hint { font-size: 13px; color: var(--fg-dim); padding: 4px 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .pool-hint .counter { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+  .pool-hint .counter { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--fg-muted); font-variant-numeric: tabular-nums; display: inline-block; }
+  .pool-hint .counter.pulse { animation: counter-pop .4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes counter-pop {
+    0% { transform: scale(1.16); }
+    100% { transform: scale(1); }
+  }
   .pool-hint .counter .c-max { color: var(--fg-dim); }
   .pool-hint .counter.full { color: var(--fg); }
   .pool-list {
@@ -637,7 +849,6 @@
   .row.drop-ok { outline: 2px dashed rgba(255,255,255,.5); outline-offset: -3px; background: rgba(255,255,255,.06); }
   .row.drop-bad { outline: 2px dashed rgba(255,107,107,.6); outline-offset: -3px; }
 
-  /* ===== GRAND FINAL COLUMN (inside upper bracket) ===== */
   .gf-col .round-title {
     color: var(--gold);
     text-shadow: 0 0 12px rgba(255,214,102,0.35);
@@ -705,6 +916,11 @@
     padding: 6px 20px; font-size: 10px; letter-spacing: .22em;
   }
   .lower-bracket { filter: brightness(.9) saturate(.85); }
+  .lower-bracket-hint {
+    margin-top: 12px; text-align: right;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--fg-muted); text-transform: uppercase; opacity: .7;
+  }
   .lower-bracket .round-title { color: rgba(255,168,168,.7); }
   .lower-bracket .round-title .count { border-color: rgba(255,140,140,.15); }
   .lower-bracket .match { border-color: rgba(255,140,140,.12); }
@@ -712,7 +928,7 @@
     border-color: rgba(255,140,140,.4);
     box-shadow: 0 0 0 1px rgba(255,140,140,.08), 0 16px 48px rgba(0,0,0,.55);
   }
-  .lower-bracket .lines path { stroke: rgba(255,140,140,.14); }
+  .lower-bracket .lines path { stroke: rgba(255,255,255,.14); stroke-width: 1.2; fill: none; }
 
   .fullscreen-btn {
     width: 26px; height: 26px; border: none; display: flex;
@@ -836,6 +1052,280 @@
     .liquid-bg { display: none; }
     .flux-lines-bg { animation: none; opacity: .5; }
   }
+
+  /* ================== TOURNAMENT TABS & DUAL BRACKET ================== */
+  .tourn-tabs-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 28px;
+    background: rgba(14, 14, 14, 0.55);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    position: relative; z-index: 20;
+    flex-wrap: wrap;
+    font-family: var(--font);
+  }
+  .tourn-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--fg-muted); font-family: var(--font); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .2s cubic-bezier(.16,1,.3,1);
+    user-select: none;
+  }
+  .tourn-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--fg);
+    border-color: var(--border-hi);
+  }
+  .tourn-tab.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+  .tourn-tab .tab-num {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 1px 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    color: var(--fg-muted);
+  }
+  .tourn-tab.active .tab-num {
+    background: #fff; color: #0a0a0a;
+  }
+  .tourn-tab .tab-title {
+    font-family: var(--font); font-weight: 600; max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tourn-tab .tab-badge-status {
+    font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 100px;
+    background: rgba(255,255,255,0.06); color: var(--fg-muted);
+  }
+  .tourn-tab.active .tab-badge-status {
+    background: rgba(255,255,255,0.15); color: #fff;
+  }
+  .tab-badge-status.done {
+    background: rgba(255, 214, 102, 0.15) !important;
+    color: var(--gold) !important;
+    border: 1px solid rgba(255, 214, 102, 0.35);
+  }
+  .tab-badge-status.live {
+    background: rgba(145, 70, 255, 0.15) !important;
+    color: #c499ff !important;
+    border: 1px solid rgba(145, 70, 255, 0.35);
+  }
+  .tourn-tabs-actions {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+  }
+  .tab-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--fg-muted); font-family: var(--font); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+  }
+  .tab-action-btn:hover {
+    background: rgba(255,255,255,0.08); color: var(--fg);
+    border-color: var(--border-hi);
+  }
+  .tab-action-btn.active {
+    background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);
+  }
+
+  /* Split view styling */
+  .split-bracket-wrap {
+    display: flex; flex-direction: column; gap: 32px; width: 100%;
+  }
+  .split-bracket-card {
+    background: rgba(18, 18, 18, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 20px;
+    position: relative;
+    backdrop-filter: blur(16px);
+  }
+  .split-bracket-card.active-split {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .split-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .split-card-title {
+    font-family: var(--font); font-size: 16px; font-weight: 600;
+    color: #fff; display: flex; align-items: center; gap: 10px;
+  }
+  .split-card-actions {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ================== POLISH · MOTION & MICRO-INTERACTIONS ================== */
+  .bracket-scroll { scroll-behavior: smooth; }
+
+  .row.clickable:focus-visible {
+    outline: 2px solid rgba(255,255,255,.55);
+    outline-offset: -2px;
+  }
+
+  .row.just-won { animation: winLand .55s cubic-bezier(.16,1,.3,1); }
+  .row.just-won .arrow { animation: winArrow .55s cubic-bezier(.16,1,.3,1); }
+  @keyframes winLand {
+    0% { filter: brightness(1.75); }
+    100% { filter: brightness(1); }
+  }
+  @keyframes winArrow {
+    0% { opacity: 0; transform: translateX(-10px); }
+    60% { opacity: 1; transform: translateX(2px); }
+    100% { opacity: .6; transform: translateX(0); }
+  }
+
+  .row.row-in { animation: rowAdvance .45s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes rowAdvance {
+    from { opacity: 0; transform: translateX(-9px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .match:active {
+    transform: translateY(0) rotate3d(1,1,0,.6deg) scale(.996);
+    transition-duration: .12s;
+  }
+
+  .lines.draw-in path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: lineDraw .85s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes lineDraw { to { stroke-dashoffset: 0; } }
+
+  .tourn-tab { position: relative; overflow: hidden; }
+  .tourn-tab.active { animation: tabLift .35s cubic-bezier(.16,1,.3,1); }
+  .tourn-tab.active::after {
+    content: ''; position: absolute; left: 14px; right: 14px; bottom: 3px; height: 2px;
+    border-radius: 2px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
+    box-shadow: 0 0 12px rgba(255,255,255,.45);
+    animation: tabUnderline .4s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes tabLift {
+    from { transform: translateY(1px) scale(.985); }
+    to   { transform: none; }
+  }
+  @keyframes tabUnderline {
+    from { opacity: 0; transform: scaleX(.25); }
+    to   { opacity: 1; transform: scaleX(1); }
+  }
+  .tab-badge-status { display: inline-flex; align-items: center; gap: 6px; }
+  .tab-badge-status.live::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 8px currentColor;
+    animation: pulse-led 1.4s ease-in-out infinite;
+  }
+  .tab-badge-status.done::before {
+    content: '★'; font-size: 9px; line-height: 1;
+  }
+
+  .split-bracket-card { transition: border-color .3s, box-shadow .35s, transform .35s; }
+  .split-bracket-card:hover {
+    border-color: var(--border-hi);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 50px rgba(0,0,0,.4);
+  }
+
+  .champion { isolation: isolate; }
+  .champion > * { position: relative; z-index: 1; }
+  .champion.celebrate::before {
+    content: ''; position: absolute; inset: -45%; z-index: 0; pointer-events: none;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,214,102,.22) 40deg, transparent 85deg, transparent 360deg);
+    animation: champSpin 7s linear infinite;
+  }
+  .champion.celebrate .name { animation: champName .8s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes champSpin { to { transform: rotate(360deg); } }
+  @keyframes champName {
+    from { opacity: 0; transform: translateY(10px) scale(.94); letter-spacing: .04em; }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .confetti-layer {
+    position: absolute; inset: 0; z-index: 3; overflow: hidden;
+    border-radius: inherit; pointer-events: none;
+  }
+  .confetti-piece {
+    position: absolute; top: -14px; opacity: 0; border-radius: 1px;
+    animation: confettiFall var(--dur, 1.6s) cubic-bezier(.15,.6,.3,1) var(--delay, 0s) forwards;
+  }
+  @keyframes confettiFall {
+    0%   { opacity: 0; transform: translate3d(0,-10px,0) rotate(0deg); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translate3d(var(--dx,0px), var(--dy,180px), 0) rotate(var(--rot,360deg)); }
+  }
+
+  .pool-item.is-new { animation: poolIn .45s cubic-bezier(.16,1,.3,1); }
+  @keyframes poolIn {
+    from { opacity: 0; transform: translateX(-8px); background: rgba(255,255,255,.12); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  #bracketView.view-swap .tournament-layout,
+  #bracketView.view-swap .split-bracket-wrap {
+    animation: viewSwap .45s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes viewSwap {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .tourn-progress {
+    display: flex; align-items: center; gap: 10px;
+    width: 150px; flex: none;
+  }
+  .tourn-progress[hidden] { display: none; }
+  .tp-track {
+    flex: 1; height: 3px; border-radius: 2px; overflow: hidden;
+    background: rgba(255,255,255,.1);
+  }
+  .tp-fill {
+    height: 100%; width: 0%; border-radius: 2px;
+    background: linear-gradient(90deg, #fff, #8a8a8a);
+    box-shadow: 0 0 12px rgba(255,255,255,.35);
+    transition: width .6s cubic-bezier(.16,1,.3,1);
+  }
+  .tp-label {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-muted);
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+
+  #__toast { overflow: hidden; }
+  #__toast.toast-in::after {
+    content: ''; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
+    transform-origin: left; opacity: .7;
+    background: linear-gradient(90deg, #fff, #8a8a8a);
+    animation: toastBar 2.2s linear forwards;
+  }
+  @keyframes toastBar {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  @media (max-width: 720px) {
+    .tourn-progress { display: none; }
+  }
+
+  html.theme-anim body { transition: background-color .45s ease, color .45s ease; }
+  html.theme-anim header,
+  html.theme-anim .control-section,
+  html.theme-anim .match,
+  html.theme-anim .bracket-scroll,
+  html.theme-anim .tourn-tab,
+  html.theme-anim .split-bracket-card,
+  html.theme-anim .champion,
+  html.theme-anim .pool-list,
+  html.theme-anim .found-list,
+  html.theme-anim .status-line,
+  html.theme-anim .modal {
+    transition: background-color .45s ease, border-color .45s ease, color .45s ease;
+  }
 </style>
 </head>
 <body class="intro-active">
@@ -908,12 +1398,68 @@
     <button class="shimmer-btn" id="createBtnTop" style="display:none;">
       <span class="shimmer-text">Создать сетку</span>
     </button>
+    <button class="mini-btn" id="fluxCfgBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Настройки Flux lines">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <line x1="4" y1="7" x2="20" y2="7"/>
+        <circle cx="9" cy="7" r="2.4"/>
+        <line x1="4" y1="17" x2="20" y2="17"/>
+        <circle cx="15" cy="17" r="2.4"/>
+      </svg>
+    </button>
+    <button class="mini-btn" id="fluxToggleBtn" type="button" aria-pressed="true" title="Flux lines: вкл">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 8c2.2 0 2.2-3 4.4-3s2.2 3 4.4 3 2.2-3 4.4-3 2.2 3 4.4 3"/>
+        <path d="M3 16c2.2 0 2.2-3 4.4-3s2.2 3 4.4 3 2.2-3 4.4-3 2.2 3 4.4 3"/>
+      </svg>
+    </button>
+    <button class="mini-btn" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Тема">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5"/>
+        <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
     <button class="btn-toggle open" id="toggleBtn">
       <span>Настройки</span>
       <span class="chev">▾</span>
     </button>
   </div>
 </header>
+
+<div class="tourn-tabs-bar" id="tournTabsBar">
+  <div class="tourn-tab active" data-slot="0" id="tournTab0" title="Основной турнир (Сетка 1)">
+    <span class="tab-num">1</span>
+    <span class="tab-title" id="tabTitle0">Турнир 1</span>
+    <span class="tab-badge-status" id="tabStatus0">Пусто</span>
+  </div>
+  <div class="tourn-tab" data-slot="1" id="tournTab1" title="Второй параллельный турнир (Сетка 2)">
+    <span class="tab-num">2</span>
+    <span class="tab-title" id="tabTitle1">Турнир 2</span>
+    <span class="tab-badge-status" id="tabStatus1">Пусто</span>
+  </div>
+  <div class="tourn-tabs-actions">
+    <button class="tab-action-btn" id="copyPoolBtn" type="button" title="Скопировать текущий пул игроков в другой турнир">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span>Скопировать пул</span>
+    </button>
+    <button class="tab-action-btn" id="splitViewBtn" type="button" title="Режим раздельного экрана: показывать обе сетки турниров">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="2"/><rect x="13" y="3" width="8" height="18" rx="2"/></svg>
+      <span>Обе сетки</span>
+    </button>
+  </div>
+</div>
+
+<div class="theme-pop" id="themePop" hidden role="menu" aria-label="Тема оформления">
+  <div class="theme-pop-title">Тема</div>
+  <div class="theme-grid" id="themeGrid"></div>
+</div>
+
+<div class="flux-pop" id="fluxPop" hidden role="dialog" aria-label="Настройки Flux lines">
+  <div class="fp-head">
+    <span class="fp-title">Flux Lines</span>
+    <button class="fp-reset" id="fluxResetBtn" type="button">Сброс</button>
+  </div>
+  <div class="fp-body" id="fluxControls"></div>
+</div>
 
 <div class="controls" id="controls">
   <section class="control-section">
@@ -1006,6 +1552,10 @@
     <div class="toolbar">
       <h2 class="gradient-text" id="bracketTitle">Турнир</h2>
       <span class="meta" id="bracketMeta">—</span>
+      <div class="tourn-progress" id="tournProgress" hidden role="progressbar" aria-label="Прогресс турнира" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="tp-track"><div class="tp-fill" id="tpFill"></div></div>
+        <span class="tp-label" id="tpLabel">0/0</span>
+      </div>
       <div class="actions">
         <button class="btn-sm" id="undoBtn" disabled title="Отменить последнее действие">↶ Undo</button>
         <button class="fullscreen-btn" id="fullscreenBtn" type="button" aria-label="На весь экран">
@@ -1024,21 +1574,23 @@
     <div class="bracket-hint">
       Клик по игроку — проходит дальше. Повторный клик — отмена (откатывает и верхнюю, и нижнюю сетку). <kbd>✎</kbd> — заменить игрока. <kbd>⇄</kbd> — переместить игрока. Drag&amp;Drop — поменять команды местами (только в пределах одного раунда).
     </div>
-    <div class="tournament-layout">
+    <div class="split-bracket-wrap" id="splitBracketWrap" hidden></div>
+    <div class="tournament-layout" id="singleTournamentLayout">
       <div class="bracket-scroll">
         <div class="bracket" id="rounds"></div>
         <div class="lower-bracket-wrapper" id="lowerBracketWrapper" hidden>
           <div class="bracket-divider"><span>LOWER BRACKET · DOUBLE ELIMINATION</span></div>
           <div class="bracket lower-bracket" id="lowerBracket"></div>
+          <div class="lower-bracket-hint">Победитель нижней сетки → Grand Final</div>
         </div>
       </div>
     </div>
   </div>
 </main>
 
-<div class="modal-overlay" id="replaceModal" hidden>
+<div class="modal-overlay" id="replaceModal" hidden role="dialog" aria-modal="true" aria-labelledby="replaceModalTitle">
   <div class="modal">
-    <div class="modal-title">Заменить игрока</div>
+    <div class="modal-title" id="replaceModalTitle">Заменить игрока</div>
     <div class="modal-sub">Команда: <b id="replaceTeamName">—</b></div>
     <div class="modal-members" id="replaceMembers"></div>
     <div class="modal-error" id="replaceError"></div>
@@ -1049,9 +1601,9 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="playerMoveModal" hidden>
+<div class="modal-overlay" id="playerMoveModal" hidden role="dialog" aria-modal="true" aria-labelledby="pmTitle">
   <div class="modal">
-    <div class="modal-title">Переместить игрока</div>
+    <div class="modal-title" id="pmTitle">Переместить игрока</div>
     <div class="modal-sub">Игрок: <b id="pmPlayerName">—</b></div>
     <div class="modal-error" id="pmError"></div>
     <div class="modal-members" id="pmTeamList" style="max-height:320px;overflow-y:auto;"></div>
@@ -1092,7 +1644,49 @@
 
   const MAX_COLORS = 8;
   const INTRO_SECONDS = 1.8;
-  const FLOW = { up: [0,1], down: [0,-1], left: [-1,0], right: [1,0] };
+  const FLOW = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
+  const LS_CFG = 'cs2_flux_cfg_v1';
+
+  const DEFAULT_SETTINGS = {
+    colors: ['#ffffff', '#8a8a8a', '#e6e6e6'],
+    colorsCustom: false,
+    glow: 1.1,
+    rimWidth: 0.18,
+    lineWidth: 0.6,
+    sharpness: 2.8,
+    shimmer: 1.8,
+    speed: 0.22,
+    scale: 2.1,
+    turbulence: 0.75,
+    fluidity: 0.15,
+    opacity: 0.95,
+    flow: 'down',
+    mouseInteraction: true,
+    mouseStrength: 0.7,
+    mouseRadius: 0.35,
+    clickSwirl: true,
+    swirlStrength: 2.0,
+    intro: true
+  };
+
+  let settings = Object.assign({}, DEFAULT_SETTINGS);
+  try {
+    const raw = localStorage.getItem(LS_CFG);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === 'object') {
+        Object.keys(DEFAULT_SETTINGS).forEach(function (key) {
+          const value = saved[key];
+          if (value === undefined) return;
+          if (key === 'colors') {
+            if (Array.isArray(value) && value.length) settings.colors = value.slice(0, MAX_COLORS);
+            return;
+          }
+          if (typeof value === typeof DEFAULT_SETTINGS[key]) settings[key] = value;
+        });
+      }
+    }
+  } catch (e) {}
 
   const VERTEX = `#version 300 es
 in vec2 aPosition;
@@ -1230,12 +1824,7 @@ void main() {
     }
     return { program, uniforms };
   };
-  const settings = {
-    colors: ['#ffffff', '#8a8a8a', '#ffffff'],
-    speed: 0.22, scale: 2.1, turbulence: 0.75, fluidity: 0.15,
-    rimWidth: 0.18, sharpness: 2.8, shimmer: 1.8, glow: 1.1, lineWidth: 0.6,
-    flow: FLOW.down, opacity: 0.95
-  };
+
   const canvas = document.createElement('canvas');
   canvas.className = 'flux-lines-canvas'; canvas.setAttribute('aria-hidden', 'true');
   container.appendChild(canvas);
@@ -1247,6 +1836,7 @@ void main() {
   gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
   const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
   const cache = new Map();
   const parse = (value, fallback) => {
@@ -1260,22 +1850,34 @@ void main() {
     }
     cache.set(key, rgb); return rgb;
   };
+
   const palette = new Float32Array(MAX_COLORS * 3);
-  let time = 0, reveal = 0, raf = 0, last = 0, visible = true;
+  let time = 0, reveal = settings.intro ? 0 : 1, raf = 0, last = 0, visible = true;
+  let pointerInside = false, pointerX = 0, pointerY = 0;
+  let swirlAngle = 0, swirlX = 0, swirlY = 0;
+  let enabled = (() => { try { return localStorage.getItem('cs2_flux_v1') !== '0'; } catch (e) { return true; } })();
+
   const render = () => {
-    const ratio = canvas.width / Math.max(1, container.clientWidth);
+    const width = Math.max(1, container.clientWidth);
+    const height = Math.max(1, container.clientHeight);
+    const ratio = canvas.width / width;
+    const hRatio = canvas.height / height;
+
     settings.colors.forEach((value, index) => palette.set(parse(value, [1,1,1]), index * 3));
+
     const intro = Math.min(1, reveal);
+    const fv = FLOW[settings.flow] || FLOW.down;
+
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.useProgram(program.program); gl.bindVertexArray(vao);
     gl.uniform2f(u.uResolution, canvas.width, canvas.height);
     gl.uniform1f(u.uTime, time);
-    gl.uniform2f(u.uFlow, settings.flow[0], settings.flow[1]);
+    gl.uniform2f(u.uFlow, fv[0], fv[1]);
     gl.uniform1f(u.uSpeed, settings.speed);
     gl.uniform1f(u.uScale, settings.scale);
     gl.uniform1f(u.uTurbulence, settings.turbulence);
-    gl.uniform1f(u.uFluidity, settings.fluidity);
-    gl.uniform1f(u.uRimWidth, settings.rimWidth);
+    gl.uniform1f(u.uFluidity, Math.max(0.001, settings.fluidity));
+    gl.uniform1f(u.uRimWidth, Math.max(0.001, settings.rimWidth));
     gl.uniform1f(u.uSharpness, settings.sharpness);
     gl.uniform1f(u.uShimmer, settings.shimmer);
     gl.uniform1f(u.uGlow, settings.glow);
@@ -1283,22 +1885,33 @@ void main() {
     gl.uniform1f(u.uMaxHalf, 28 * ratio);
     gl.uniform3fv(u.uColors, palette);
     gl.uniform1i(u.uColorCount, settings.colors.length);
-    gl.uniform4f(u.uMagnet, 0, 0, 0, 0.35);
-    gl.uniform4f(u.uSwirl, 0, 0, canvas.height * 0.22, 0);
+
+    const mr = Math.max(0.02, settings.mouseRadius);
+    if (settings.mouseInteraction && pointerInside) {
+      gl.uniform4f(u.uMagnet, pointerX * ratio, (height - pointerY) * hRatio, settings.mouseStrength, mr);
+    } else {
+      gl.uniform4f(u.uMagnet, 0, 0, 0, mr);
+    }
+    gl.uniform4f(u.uSwirl, swirlX, swirlY, canvas.height * 0.3, settings.clickSwirl ? swirlAngle : 0);
+
     gl.uniform1f(u.uReveal, intro * intro * (3 - 2 * intro));
-    gl.uniform1f(u.uLight, 0); gl.uniform1f(u.uOpaque, 0);
+    gl.uniform1f(u.uLight, 0);
+    gl.uniform1f(u.uOpaque, 0);
     gl.uniform3fv(u.uBackground, parse(null, [0.02,0.02,0.02]));
     gl.uniform1f(u.uOpacity, settings.opacity);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
+
   const frame = (now) => {
-    raf = 0; if (!visible || document.hidden) return;
+    raf = 0; if (!enabled || !visible || document.hidden) return;
     const dt = last ? clampFn((now - last) / 1000, 0.0005, 0.05) : 1/60;
     last = now; time += dt;
     if (reveal < 1) reveal = Math.min(1, reveal + dt / INTRO_SECONDS);
+    if (swirlAngle > 0.002) swirlAngle *= Math.exp(-dt / 0.7); else swirlAngle = 0;
     render(); raf = requestAnimationFrame(frame);
   };
-  const wake = () => { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame); };
+  const wake = () => { if (!raf && enabled && visible && !document.hidden) raf = requestAnimationFrame(frame); };
+
   const resize = () => {
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
@@ -1310,16 +1923,371 @@ void main() {
   new ResizeObserver(resize).observe(container);
   new IntersectionObserver((entries) => { visible = entries.some((e) => e.isIntersecting); if (visible) { last = 0; wake(); } }).observe(container);
   document.addEventListener('visibilitychange', () => { last = 0; wake(); });
+
+  const onPointerMove = (e) => { pointerX = e.clientX; pointerY = e.clientY; pointerInside = true; };
+  const onPointerLeave = () => { pointerInside = false; };
+  const onPointerDown = (e) => {
+    if (!settings.clickSwirl) return;
+    if (e.target && e.target.closest && e.target.closest('header, .controls, .modal-overlay, .theme-pop, .flux-pop, #bracketView')) return;
+    const ratio = canvas.width / Math.max(1, container.clientWidth);
+    const hRatio = canvas.height / Math.max(1, container.clientHeight);
+    swirlX = e.clientX * ratio;
+    swirlY = (Math.max(1, container.clientHeight) - e.clientY) * hRatio;
+    swirlAngle = settings.swirlStrength;
+    last = 0; wake();
+  };
+  window.addEventListener('pointermove', onPointerMove, { passive: true });
+  window.addEventListener('pointerdown', onPointerDown, { passive: true });
+  document.addEventListener('mouseleave', onPointerLeave);
+  window.addEventListener('blur', onPointerLeave);
+
+  const persist = () => {
+    try {
+      const data = {};
+      Object.keys(DEFAULT_SETTINGS).forEach((k) => { data[k] = settings[k]; });
+      localStorage.setItem(LS_CFG, JSON.stringify(data));
+    } catch (e) {}
+  };
+
+  window.FluxLines = {
+    setColors(colors, force) {
+      if (!Array.isArray(colors) || !colors.length) return false;
+      if (!force && settings.colorsCustom) return false;
+      settings.colors = colors.slice(0, MAX_COLORS);
+      persist(); render();
+      return true;
+    },
+    setEnabled(on) {
+      enabled = !!on;
+      if (!enabled) { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+      else { last = 0; wake(); }
+    },
+    setOptions(partial) {
+      if (!partial || typeof partial !== 'object') return;
+      Object.keys(partial).forEach((key) => {
+        if (key === 'colors') {
+          if (Array.isArray(partial.colors) && partial.colors.length) {
+            settings.colors = partial.colors.slice(0, MAX_COLORS);
+            settings.colorsCustom = true;
+          }
+          return;
+        }
+        if (!(key in settings)) return;
+        settings[key] = partial[key];
+      });
+      if (settings.intro === false) reveal = 1;
+      last = 0; persist(); render(); wake();
+    },
+    resetOptions() {
+      settings = Object.assign({}, DEFAULT_SETTINGS, { colors: DEFAULT_SETTINGS.colors.slice() });
+      reveal = settings.intro ? 0 : 1;
+      time = 0; swirlAngle = 0;
+      persist(); render(); wake();
+    },
+    getOptions() { return Object.assign({}, settings, { colors: settings.colors.slice() }); },
+    defaults: DEFAULT_SETTINGS
+  };
+
   resize(); wake();
+})();
+
+(function initThemeAndFluxTools() {
+  const root = document.documentElement;
+  const LS_THEME = 'cs2_theme_v1';
+  const LS_FLUX = 'cs2_flux_v1';
+
+  const THEMES = {
+    graphite: { label: 'Graphite', flux: ['#ffffff', '#8a8a8a', '#e6e6e6'] },
+    emerald:  { label: 'Emerald',  flux: ['#8dffcb', '#2f8f68', '#c9ffe8'] },
+    crimson:  { label: 'Crimson',  flux: ['#ff8fa3', '#a0304a', '#ffd0d8'] },
+    ocean:    { label: 'Ocean',    flux: ['#9fe6ff', '#2a6fa8', '#d4f4ff'] },
+    amber:    { label: 'Amber',    flux: ['#ffd666', '#a87a20', '#fff0c2'] },
+    violet:   { label: 'Violet',   flux: ['#cfa8ff', '#6d3ba8', '#eadcff'] }
+  };
+  window.__CS2_THEMES = THEMES;
+
+  const themeBtn = document.getElementById('themeBtn');
+  const fluxBtn = document.getElementById('fluxToggleBtn');
+  const pop = document.getElementById('themePop');
+  const grid = document.getElementById('themeGrid');
+
+  let currentTheme = 'graphite';
+  try { const s = localStorage.getItem(LS_THEME); if (s && THEMES[s]) currentTheme = s; } catch (e) {}
+
+  if (grid) {
+    grid.innerHTML = Object.keys(THEMES).map(function (key) {
+      const t = THEMES[key];
+      return '<button class="theme-swatch" type="button" role="menuitemradio" data-theme="' + key + '" title="' + t.label + '">' +
+        '<span class="sw-dot" style="--c1:' + t.flux[0] + ';--c2:' + t.flux[1] + ';--c3:' + t.flux[2] + '"></span>' +
+        '<span class="sw-name">' + t.label + '</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  function applyTheme(key) {
+    if (!THEMES[key]) key = 'graphite';
+    currentTheme = key;
+    root.setAttribute('data-theme', key);
+    root.classList.add('theme-anim');
+    clearTimeout(applyTheme._t);
+    applyTheme._t = setTimeout(function () { root.classList.remove('theme-anim'); }, 520);
+    try { localStorage.setItem(LS_THEME, key); } catch (e) {}
+    if (window.FluxLines && window.FluxLines.setColors) window.FluxLines.setColors(THEMES[key].flux);
+    if (window.__fluxPanelRefresh) window.__fluxPanelRefresh();
+    if (grid) {
+      grid.querySelectorAll('.theme-swatch').forEach(function (b) {
+        const on = b.dataset.theme === key;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+    }
+  }
+
+  let fluxOn = true;
+  try { fluxOn = localStorage.getItem(LS_FLUX) !== '0'; } catch (e) {}
+
+  function applyFlux(on) {
+    fluxOn = !!on;
+    root.classList.toggle('flux-off', !fluxOn);
+    try { localStorage.setItem(LS_FLUX, fluxOn ? '1' : '0'); } catch (e) {}
+    if (window.FluxLines && window.FluxLines.setEnabled) window.FluxLines.setEnabled(fluxOn);
+    if (fluxBtn) {
+      fluxBtn.setAttribute('aria-pressed', fluxOn ? 'true' : 'false');
+      fluxBtn.classList.toggle('off', !fluxOn);
+      fluxBtn.title = fluxOn ? 'Flux lines: вкл' : 'Flux lines: выкл';
+    }
+  }
+
+  applyTheme(currentTheme);
+  applyFlux(fluxOn);
+
+  function positionPop() {
+    if (!pop || !themeBtn || pop.hidden) return;
+    const r = themeBtn.getBoundingClientRect();
+    const w = pop.offsetWidth || 268;
+    const h = pop.offsetHeight || 220;
+    let left = r.right - w;
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    let top = r.bottom + 10;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 10);
+    pop.style.left = Math.round(left) + 'px';
+    pop.style.top = Math.round(top) + 'px';
+  }
+  function openPop() {
+    if (!pop) return;
+    pop.hidden = false;
+    if (themeBtn) themeBtn.setAttribute('aria-expanded', 'true');
+    positionPop();
+  }
+  function closePop() {
+    if (!pop) return;
+    pop.hidden = true;
+    if (themeBtn) themeBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (themeBtn && pop) {
+    themeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (pop.hidden) openPop(); else closePop();
+    });
+    document.addEventListener('pointerdown', function (e) {
+      if (pop.hidden) return;
+      if (pop.contains(e.target) || themeBtn.contains(e.target)) return;
+      closePop();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !pop.hidden) closePop();
+    });
+    window.addEventListener('resize', positionPop);
+    window.addEventListener('scroll', function () { if (!pop.hidden) closePop(); }, true);
+  }
+
+  if (grid) {
+    grid.addEventListener('click', function (e) {
+      const btn = e.target.closest('.theme-swatch');
+      if (btn) applyTheme(btn.dataset.theme);
+    });
+  }
+
+  if (fluxBtn) {
+    fluxBtn.addEventListener('click', function () { applyFlux(!fluxOn); });
+  }
+})();
+
+(function initFluxSettingsPanel() {
+  const api = window.FluxLines;
+  const btn = document.getElementById('fluxCfgBtn');
+  const pop = document.getElementById('fluxPop');
+  const host = document.getElementById('fluxControls');
+  const resetBtn = document.getElementById('fluxResetBtn');
+  if (!api || !btn || !pop || !host) return;
+
+  const SLIDERS = [
+    ['glow',        'Glow',        0.2, 3,   0.05],
+    ['rimWidth',    'Rim width',   0.05, 0.5, 0.01],
+    ['lineWidth',   'Line width',  0,   2,   0.05],
+    ['speed',       'Speed',       0,   2,   0.01],
+    ['scale',       'Scale',       0.5, 4,   0.05],
+    ['turbulence',  'Turbulence',  0,   2,   0.01],
+    ['fluidity',    'Fluidity',    0.02, 1,  0.01],
+    ['sharpness',   'Sharpness',   1,   6,   0.05],
+    ['shimmer',     'Shimmer',     0,   4,   0.05],
+    ['mouseStrength', 'Mouse force', 0, 2,   0.05],
+    ['mouseRadius', 'Mouse radius', 0.1, 1,  0.01]
+  ];
+  const TOGGLES = [
+    ['mouseInteraction', 'Mouse'],
+    ['clickSwirl', 'Swirl'],
+    ['intro', 'Intro']
+  ];
+  const FLOWS = [['up','↑'], ['down','↓'], ['left','←'], ['right','→']];
+
+  host.innerHTML =
+    SLIDERS.map(([key, label, min, max, step]) =>
+      '<div class="fp-row">' +
+        '<div class="fp-row-head"><span class="fp-label">' + label + '</span>' +
+        '<span class="fp-val" data-val="' + key + '"></span></div>' +
+        '<input class="fp-range" type="range" data-key="' + key + '" min="' + min + '" max="' + max + '" step="' + step + '">' +
+      '</div>'
+    ).join('') +
+    '<div class="fp-section">Поведение</div>' +
+    '<div class="fp-toggles">' +
+      TOGGLES.map(([key, label]) =>
+        '<label class="fp-toggle"><input type="checkbox" data-key="' + key + '"><span>' + label + '</span></label>'
+      ).join('') +
+    '</div>' +
+    '<div class="fp-section">Направление</div>' +
+    '<div class="fp-seg">' +
+      FLOWS.map(([value, arrow]) =>
+        '<button type="button" data-flow="' + value + '" title="' + value + '">' + arrow + '</button>'
+      ).join('') +
+    '</div>' +
+    '<div class="fp-section">Цвета</div>' +
+    '<div class="fp-colors">' +
+      [0,1,2].map(i => '<label class="fp-color"><input type="color" data-color="' + i + '"><span>' + (i + 1) + '</span></label>').join('') +
+    '</div>';
+
+  const refresh = () => {
+    const o = api.getOptions();
+    host.querySelectorAll('input[data-key]').forEach((el) => {
+      const key = el.dataset.key;
+      if (el.type === 'checkbox') {
+        el.checked = !!o[key];
+        el.closest('.fp-toggle').classList.toggle('on', el.checked);
+      } else {
+        el.value = o[key];
+        const lab = host.querySelector('[data-val="' + key + '"]');
+        if (lab) lab.textContent = Number(o[key]).toFixed(2);
+      }
+    });
+    host.querySelectorAll('button[data-flow]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.flow === o.flow);
+    });
+    host.querySelectorAll('input[data-color]').forEach((inp) => {
+      inp.value = o.colors[+inp.dataset.color] || '#ffffff';
+    });
+  };
+  window.__fluxPanelRefresh = refresh;
+
+  host.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.matches('input[type=range]')) {
+      const key = t.dataset.key;
+      api.setOptions({ [key]: +t.value });
+      const lab = host.querySelector('[data-val="' + key + '"]');
+      if (lab) lab.textContent = (+t.value).toFixed(2);
+    } else if (t.matches('input[type=color]')) {
+      const colors = api.getOptions().colors.slice();
+      colors[+t.dataset.color] = t.value;
+      api.setOptions({ colors });
+    }
+  });
+  host.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.matches('input[type=checkbox]')) {
+      api.setOptions({ [t.dataset.key]: t.checked });
+      t.closest('.fp-toggle').classList.toggle('on', t.checked);
+    }
+  });
+  host.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-flow]');
+    if (!b) return;
+    api.setOptions({ flow: b.dataset.flow });
+    host.querySelectorAll('button[data-flow]').forEach((x) => x.classList.toggle('active', x === b));
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      api.resetOptions();
+      const themeKey = document.documentElement.getAttribute('data-theme') || 'graphite';
+      const pal = window.__CS2_THEMES && window.__CS2_THEMES[themeKey] && window.__CS2_THEMES[themeKey].flux;
+      if (pal) api.setColors(pal, true);
+      refresh();
+    });
+  }
+
+  const position = () => {
+    if (pop.hidden) return;
+    const r = btn.getBoundingClientRect();
+    const w = pop.offsetWidth || 300;
+    const h = pop.offsetHeight || 420;
+    let left = r.right - w;
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    let top = r.bottom + 10;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 10);
+    pop.style.left = Math.round(left) + 'px';
+    pop.style.top = Math.round(top) + 'px';
+  };
+  const open = () => { pop.hidden = false; btn.setAttribute('aria-expanded', 'true'); refresh(); position(); };
+  const close = () => { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (pop.hidden) open(); else close();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (pop.hidden) return;
+    if (pop.contains(e.target) || btn.contains(e.target)) return;
+    close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !pop.hidden) close();
+  });
+  window.addEventListener('resize', position);
+  window.addEventListener('scroll', () => { if (!pop.hidden) close(); }, true);
+
+  refresh();
 })();
 
 (() => {
   'use strict';
 
-  const LS_POOL = 'cs2_pool_v11';
-  const LS_TOURN = 'cs2_tournament_v11';
-  const LS_UI = 'cs2_ui_v11';
-  const LS_UNDO = 'cs2_undo_v11';
+  const LS_POOL_LEGACY = 'cs2_pool_v11';
+  const LS_TOURN_LEGACY = 'cs2_tournament_v11';
+  const LS_UI_LEGACY = 'cs2_ui_v11';
+  const LS_UNDO_LEGACY = 'cs2_undo_v11';
+
+  const LS_ACTIVE_SLOT = 'cs2_active_slot_v12';
+  const LS_SLOTS = 'cs2_slots_data_v12';
+  const LS_SPLIT = 'cs2_split_view_v12';
+
+  let activeSlot = 0; // 0 = Турнир 1, 1 = Турнир 2
+  let isSplitView = false;
+
+  function defaultSlotData(idx) {
+    return {
+      tournament: null,
+      pool: [],
+      undoStack: [],
+      currentFormat: 1,
+      maxPlayers: 32,
+      tournName: 'CS2 Турнир ' + (idx + 1),
+      shuffle: false,
+      controlsCollapsed: false
+    };
+  }
+
+  let slots = [defaultSlotData(0), defaultSlotData(1)];
 
   let pool = [];
   let tournament = null;
@@ -1329,7 +2297,15 @@ void main() {
   let controlsCollapsed = false;
   let currentFormat = 1;
   let maxPlayers = 32;
+  const maxByFormat = Object.create(null);
   let undoStack = [];
+
+  let lastAddedName = null;
+  let lastPickedKey = null;
+  let captureAdvance = false;
+  const advanceKeys = new Set();
+  let pendingLineAnim = false;
+  let championCelebrated = null;
 
   const $ = id => document.getElementById(id);
   const $$ = sel => document.querySelectorAll(sel);
@@ -1337,49 +2313,118 @@ void main() {
   const nextPow2 = n => { let s = 2; while (s < n) s *= 2; return s; };
   const MAX_NAME_LEN = 32;
 
+  function syncActiveSlotFromMemory() {
+    const cur = slots[activeSlot];
+    tournament = cur.tournament;
+    pool = cur.pool || [];
+    undoStack = cur.undoStack || [];
+    currentFormat = cur.currentFormat || 1;
+    maxPlayers = cur.maxPlayers || 32;
+    controlsCollapsed = !!cur.controlsCollapsed;
+    if ($('tournName')) $('tournName').value = cur.tournName || ('CS2 Турнир ' + (activeSlot + 1));
+    if ($('shuffle')) $('shuffle').checked = !!cur.shuffle;
+  }
+
+  function syncActiveSlotToMemory() {
+    slots[activeSlot].tournament = tournament;
+    slots[activeSlot].pool = pool;
+    slots[activeSlot].undoStack = undoStack;
+    slots[activeSlot].currentFormat = currentFormat;
+    slots[activeSlot].maxPlayers = maxPlayers;
+    slots[activeSlot].controlsCollapsed = controlsCollapsed;
+    if ($('tournName')) slots[activeSlot].tournName = $('tournName').value.trim() || ('CS2 Турнир ' + (activeSlot + 1));
+    if ($('shuffle')) slots[activeSlot].shuffle = $('shuffle').checked;
+  }
+
   function loadState() {
     try {
-      const p = localStorage.getItem(LS_POOL); if (p) pool = JSON.parse(p) || [];
-      const t = localStorage.getItem(LS_TOURN); if (t) tournament = JSON.parse(t) || null;
-      const u = localStorage.getItem(LS_UI);
-      if (u) {
-        const ui = JSON.parse(u);
-        controlsCollapsed = !!ui.controlsCollapsed;
-        if (ui.currentFormat) currentFormat = ui.currentFormat;
-        if (ui.maxPlayers) maxPlayers = ui.maxPlayers;
-        if (ui.tournName && $('tournName')) $('tournName').value = ui.tournName;
+      const savedSlot = localStorage.getItem(LS_ACTIVE_SLOT);
+      if (savedSlot !== null) activeSlot = parseInt(savedSlot, 10) || 0;
+      if (activeSlot < 0 || activeSlot > 1) activeSlot = 0;
+
+      const savedSplit = localStorage.getItem(LS_SPLIT);
+      if (savedSplit !== null) isSplitView = savedSplit === '1';
+
+      const rawSlots = localStorage.getItem(LS_SLOTS);
+      if (rawSlots) {
+        const parsed = JSON.parse(rawSlots);
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          slots[0] = Object.assign(defaultSlotData(0), parsed[0]);
+          slots[1] = Object.assign(defaultSlotData(1), parsed[1]);
+        }
+      } else {
+        // Backwards compatibility migration from v11
+        const legacyPool = localStorage.getItem(LS_POOL_LEGACY);
+        const legacyTourn = localStorage.getItem(LS_TOURN_LEGACY);
+        const legacyUI = localStorage.getItem(LS_UI_LEGACY);
+        const legacyUndo = localStorage.getItem(LS_UNDO_LEGACY);
+        if (legacyPool) try { slots[0].pool = JSON.parse(legacyPool) || []; } catch (e) {}
+        if (legacyTourn) try { slots[0].tournament = JSON.parse(legacyTourn) || null; } catch (e) {}
+        if (legacyUndo) try { slots[0].undoStack = JSON.parse(legacyUndo) || []; } catch (e) {}
+        if (legacyUI) {
+          try {
+            const ui = JSON.parse(legacyUI);
+            if (ui.controlsCollapsed !== undefined) slots[0].controlsCollapsed = !!ui.controlsCollapsed;
+            if (ui.currentFormat) slots[0].currentFormat = ui.currentFormat;
+            if (ui.maxPlayers) slots[0].maxPlayers = ui.maxPlayers;
+            if (ui.tournName) slots[0].tournName = ui.tournName;
+          } catch (e) {}
+        }
       }
-    } catch (e) {}
-    if (tournament) {
-      if (!tournament.mode) tournament.mode = 'SE';
-      if (tournament.mode === 'DE' && !tournament.lowerRounds) {
-        try { buildLowerBracket(tournament); propagateLower(tournament); } catch (e) {}
+    } catch (e) { console.warn('loadState error:', e); }
+
+    for (let i = 0; i < 2; i++) {
+      const t = slots[i].tournament;
+      if (t) {
+        if (!t.mode) t.mode = 'SE';
+        if (t.mode === 'DE' && !t.lowerRounds) {
+          try { buildLowerBracket(t); propagateLower(t); } catch (e) {}
+        }
       }
     }
+
+    syncActiveSlotFromMemory();
   }
+
   function saveState() {
     try {
-      localStorage.setItem(LS_POOL, JSON.stringify(pool));
-      if (tournament) localStorage.setItem(LS_TOURN, JSON.stringify(tournament)); else localStorage.removeItem(LS_TOURN);
-      localStorage.setItem(LS_UI, JSON.stringify({ controlsCollapsed, currentFormat, maxPlayers, tournName: $('tournName') ? $('tournName').value : 'CS2 Турнир' }));
-    } catch (e) {}
+      syncActiveSlotToMemory();
+      localStorage.setItem(LS_ACTIVE_SLOT, String(activeSlot));
+      localStorage.setItem(LS_SPLIT, isSplitView ? '1' : '0');
+      // Undo history is persisted separately (per slot) — keep it out of the main snapshot.
+      const snapshot = slots.map(s => Object.assign({}, s, { undoStack: [] }));
+      localStorage.setItem(LS_SLOTS, JSON.stringify(snapshot));
+      saveUndo();
+    } catch (e) { console.warn('saveState error:', e); }
+    updateTabUI();
   }
 
   function toast(msg) {
     let el = document.getElementById('__toast');
     if (!el) {
       el = document.createElement('div'); el.id = '__toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
       el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);padding:12px 20px;border-radius:6px;background:rgba(20,20,20,0.9);color:#fff;font-size:13px;font-family:var(--font);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.7);opacity:0;transition:opacity .3s,transform .3s;z-index:10001;pointer-events:none;';
       document.body.appendChild(el);
     }
+    el.classList.remove('toast-in');
+    void el.offsetWidth;
     el.textContent = msg;
-    requestAnimationFrame(() => { el.style.opacity = '1'; el.style.transform = 'translateX(-50%) translateY(0)'; });
+    requestAnimationFrame(() => {
+      el.classList.add('toast-in');
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+    });
     clearTimeout(el._t);
-    el._t = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(20px)'; }, 2200);
+    el._t = setTimeout(() => {
+      el.classList.remove('toast-in');
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2200);
   }
 
   function pushUndo(label) {
-    // Keep null snapshots too: this makes the initial tournament creation undoable.
     try {
       undoStack.push({
         label: label || 'Действие',
@@ -1391,14 +2436,26 @@ void main() {
       syncUndoBtn();
     } catch (e) { console.warn('Не удалось сохранить шаг Undo:', e); }
   }
-  function saveUndo() { try { localStorage.setItem(LS_UNDO, JSON.stringify(undoStack)); } catch (e) {} }
-  function loadUndo() { try { const raw = localStorage.getItem(LS_UNDO); undoStack = raw ? JSON.parse(raw) || [] : []; } catch (e) { undoStack = []; } }
+  function saveUndo() {
+    slots[activeSlot].undoStack = undoStack;
+    try { localStorage.setItem(LS_UNDO_LEGACY + '_' + activeSlot, JSON.stringify(undoStack)); } catch (e) {}
+  }
+  function loadUndo() {
+    try {
+      const raw = localStorage.getItem(LS_UNDO_LEGACY + '_' + activeSlot);
+      undoStack = raw ? JSON.parse(raw) || [] : (slots[activeSlot].undoStack || []);
+    } catch (e) {
+      undoStack = slots[activeSlot].undoStack || [];
+    }
+  }
   function performUndo() {
     if (!undoStack.length) return;
     const step = undoStack.pop();
     tournament = step.snapshot;
     saveUndo(); saveState();
+    pendingLineAnim = true;
     renderBracketView(); updateHeader(); syncLowerToggleUI(); syncUndoBtn();
+    pulseView();
     toast('Отменено: ' + step.label);
   }
   function syncUndoBtn() { const b = $('undoBtn'); if (b) b.disabled = !undoStack.length; }
@@ -1422,22 +2479,111 @@ void main() {
     btn.classList.toggle('open', !controlsCollapsed);
     btn.querySelector('span').textContent = controlsCollapsed ? 'Настройки' : 'Скрыть';
   }
+
+  function updateTabUI() {
+    for (let i = 0; i < 2; i++) {
+      const tab = $('tournTab' + i);
+      const titleEl = $('tabTitle' + i);
+      const statusEl = $('tabStatus' + i);
+      const s = slots[i];
+      const t = (i === activeSlot) ? tournament : s.tournament;
+      const p = (i === activeSlot) ? pool : (s.pool || []);
+      const curName = (i === activeSlot && $('tournName')) ? $('tournName').value : (s.tournName || ('Турнир ' + (i + 1)));
+
+      if (tab) tab.classList.toggle('active', i === activeSlot);
+      if (titleEl) titleEl.textContent = curName;
+      if (statusEl) {
+        statusEl.className = 'tab-badge-status';
+        if (!t) {
+          if (p.length > 0) {
+            statusEl.textContent = 'Пул: ' + p.length;
+          } else {
+            statusEl.textContent = 'Пусто';
+          }
+        } else {
+          const finalMatch = t.mode === 'DE' ? t.grandFinal : t.rounds[t.rounds.length - 1][0];
+          const champ = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1 : finalMatch.p2) : null;
+          if (champ) {
+            statusEl.textContent = 'Победитель: ' + champ;
+            statusEl.classList.add('done');
+          } else {
+            statusEl.textContent = 'В игре';
+            statusEl.classList.add('live');
+          }
+        }
+      }
+    }
+
+    const splitBtn = $('splitViewBtn');
+    if (splitBtn) splitBtn.classList.toggle('active', isSplitView);
+  }
+
+  function switchSlot(targetSlot) {
+    if (targetSlot === activeSlot) return;
+    saveState();
+    activeSlot = targetSlot;
+    syncActiveSlotFromMemory();
+    try { localStorage.setItem(LS_ACTIVE_SLOT, String(activeSlot)); } catch (e) {}
+
+    loadUndo();
+    normalizeMaxPlayers();
+    applyFormatUI();
+    renderMaxOptions();
+    applyMaxUI();
+    applyControlsState();
+    updateHeader();
+    renderPlayersSection();
+    renderTournamentSection();
+    renderTwitchSection();
+    pendingLineAnim = true;
+    renderBracketView();
+    pulseView();
+    syncUndoBtn();
+    syncLowerToggleUI();
+    updateTabUI();
+    toast('Переключено на Турнир ' + (activeSlot + 1));
+  }
+
+  function copyPoolToOtherSlot() {
+    const other = activeSlot === 0 ? 1 : 0;
+    if (!pool || !pool.length) {
+      toast('Текущий пул игроков пуст');
+      return;
+    }
+    slots[other].pool = pool.slice();
+    saveState();
+    updateTabUI();
+    toast('Пул из ' + pool.length + ' игроков скопирован в Турнир ' + (other + 1));
+  }
+
+  function toggleSplitView() {
+    isSplitView = !isSplitView;
+    saveState();
+    pendingLineAnim = true;
+    renderBracketView();
+    pulseView();
+    updateTabUI();
+    toast(isSplitView ? 'Включен режим двух сеток' : 'Обычный режим просмотра');
+  }
   function applyFormatUI() { $$('.fmt-btn').forEach(b => b.classList.toggle('active', +b.dataset.fmt === currentFormat)); }
   function maxOptionsForFormat(format) {
-    // Для каждого формата доступны лимиты на 2/4/8/16/32 полные команды.
-    // Поэтому число игроков всегда кратно размеру команды, а сетка строится
-    // на 2/4/8/16/32 командах без неполных составов.
-    const options = [2, 4, 8, 16, 32].map(teamCount => teamCount * format);
-
-    // Не теряем уже добавленных игроков при смене формата или загрузке старого сохранения.
-    // Если пул больше стандартного максимума, добавляем следующий лимит,
-    // вмещающий полное число команд и сохраняющий степень двойки для сетки.
+    const options = [2, 4, 8, 16, 32, 64].map(base => base * format);
     if (pool.length > options[options.length - 1]) {
       const neededTeams = Math.ceil(pool.length / format);
       const extraLimit = nextPow2(neededTeams) * format;
       if (!options.includes(extraLimit)) options.push(extraLimit);
     }
     return options;
+  }
+  function normalizeMaxPlayers() {
+    const minSize = currentFormat * 2;
+    const options = maxOptionsForFormat(currentFormat);
+    let target = Math.max(maxPlayers, minSize, pool.length);
+    if (!options.includes(target)) {
+      const next = options.find(o => o >= target);
+      target = next === undefined ? options[options.length - 1] : next;
+    }
+    maxPlayers = target;
   }
   function renderMaxOptions() {
     const host = $('maxPlayersOptions');
@@ -1455,6 +2601,7 @@ void main() {
           pool = pool.slice(0, newMax);
         }
         maxPlayers = newMax;
+        maxByFormat[currentFormat] = newMax;
         saveState(); applyMaxUI();
         updateHeader(); renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
       });
@@ -1462,9 +2609,99 @@ void main() {
   }
   function applyMaxUI() { $$('.max-btn').forEach(b => b.classList.toggle('active', +b.dataset.max === maxPlayers)); }
   function isPoolFull() { return pool.length >= maxPlayers; }
-  function animateNumber(el, from, to) { if (from === to) return; el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 450); }
+  function animateNumber(el, from, to, suffixSel) {
+    if (!el) return;
+    const id = (el._animId || 0) + 1;
+    el._animId = id;
+    if (from === to) return;
+    const start = performance.now();
+    const dur = 480;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+    const tick = (now) => {
+      if (el._animId !== id) return;
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const value = Math.round(from + (to - from) * eased);
+      const suffixEl = el.querySelector(suffixSel || 'small');
+      const suffix = suffixEl ? suffixEl.outerHTML : '';
+      el.innerHTML = value + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.classList.remove('pulse');
+    };
+    requestAnimationFrame(tick);
+  }
   function teamDisplayName(members) { if (!members || members.length === 0) return ''; if (members.length === 1) return members[0]; return members.join(' & '); }
   function arraysEqual(a, b) { if (a === b) return true; if (!a || !b) return false; if (a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
+
+  function rowKey(slot, roundType, ri, mi, side) {
+    return slot + ':' + roundType + ':' + ri + ':' + mi + ':' + side;
+  }
+
+  function pulseView() {
+    const view = $('bracketView');
+    if (!view || view.hidden) return;
+    view.classList.remove('view-swap');
+    void view.offsetWidth;
+    view.classList.add('view-swap');
+  }
+
+  function updateTournProgress(t) {
+    const wrap = $('tournProgress');
+    if (!wrap) return;
+    if (!t || isSplitView) { wrap.hidden = true; return; }
+    const all = [];
+    t.rounds.forEach(r => all.push(...r));
+    if (t.mode === 'DE' && t.lowerRounds) t.lowerRounds.forEach(r => all.push(...r));
+    if (t.mode === 'DE' && t.grandFinal) all.push(t.grandFinal);
+    const total = all.length;
+    const played = all.filter(m => m.winner && (m.p1 || m.p2)).length;
+    const pct = total ? Math.round((played / total) * 100) : 0;
+    wrap.hidden = false;
+    wrap.setAttribute('aria-valuenow', String(pct));
+    const fill = $('tpFill');
+    const label = $('tpLabel');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = played + '/' + total;
+  }
+
+  function celebrateChampion() {
+    if (!tournament) return;
+    const finalM = tournament.mode === 'DE' ? tournament.grandFinal : tournament.rounds[tournament.rounds.length - 1][0];
+    if (!finalM || !finalM.winner) return;
+    const champName = finalM.winner === 1 ? finalM.p1 : finalM.p2;
+    if (!champName) return;
+    const key = activeSlot + '|' + tournament.name + '|' + champName + '|' + finalM.winner;
+    if (championCelebrated === key) return;
+    championCelebrated = key;
+
+    const card = document.querySelector((isSplitView ? '.split-bracket-card.active-split ' : '') + '.champion.has-champ');
+    if (!card) return;
+    card.classList.add('celebrate');
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    const colors = ['#ffd666', '#fff1c2', '#ffffff', '#ffe58a', '#e8e8e8', '#ffc94d'];
+    for (let i = 0; i < 28; i++) {
+      const piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.left = (6 + Math.random() * 88).toFixed(1) + '%';
+      piece.style.background = colors[i % colors.length];
+      piece.style.width = (3 + Math.random() * 4).toFixed(1) + 'px';
+      piece.style.height = (5 + Math.random() * 6).toFixed(1) + 'px';
+      piece.style.setProperty('--dx', (Math.random() * 120 - 60).toFixed(0) + 'px');
+      piece.style.setProperty('--dy', (90 + Math.random() * 130).toFixed(0) + 'px');
+      piece.style.setProperty('--rot', (Math.random() * 720 - 360).toFixed(0) + 'deg');
+      piece.style.setProperty('--dur', (1.1 + Math.random() * 0.9).toFixed(2) + 's');
+      piece.style.setProperty('--delay', (Math.random() * 0.25).toFixed(2) + 's');
+      layer.appendChild(piece);
+    }
+    card.appendChild(layer);
+    setTimeout(() => {
+      layer.remove();
+      card.classList.remove('celebrate');
+    }, 2600);
+  }
 
   function renderTournamentSection() {
     const players = pool.length;
@@ -1495,19 +2732,20 @@ void main() {
     if (name.length > MAX_NAME_LEN) name = name.slice(0, MAX_NAME_LEN);
     if (pool.length >= maxPlayers) return 'full';
     if (pool.some(p => p.toLowerCase() === name.toLowerCase())) return 'dup';
-    pool.push(name); return 'ok';
+    pool.push(name); lastAddedName = name; return 'ok';
   }
   function renderPlayersSection() {
     const list = $('poolList'); const counter = $('poolCounter');
     const input = $('newPlayerInput'); const addBtn = $('addPlayerBtn');
     const full = isPoolFull();
-    if (counter) { counter.innerHTML = pool.length + '<span class="c-max">/' + maxPlayers + '</span>'; counter.classList.toggle('full', full); }
+    const oldCount = counter ? parseInt(counter.textContent, 10) || 0 : 0;
+    if (counter) { counter.innerHTML = pool.length + '<span class="c-max">/' + maxPlayers + '</span>'; counter.classList.toggle('full', full); animateNumber(counter, oldCount, pool.length, '.c-max'); }
     input.disabled = full; addBtn.disabled = full;
     input.placeholder = full ? 'Пул заполнен' : 'Никнейм';
     if (pool.length === 0) { list.innerHTML = '<div class="pool-empty">Пул пуст — добавьте игроков</div>'; }
     else {
       list.innerHTML = pool.map((name, i) =>
-        '<div class="pool-item"><span class="idx">' + String(i + 1).padStart(2, '0') + '</span><span class="pn">' + esc(name) + '</span><button class="rm" data-idx="' + i + '" title="Удалить">×</button></div>'
+        '<div class="pool-item' + (name === lastAddedName ? ' is-new' : '') + '"><span class="idx">' + String(i + 1).padStart(2, '0') + '</span><span class="pn">' + esc(name) + '</span><button class="rm" data-idx="' + i + '" title="Удалить">×</button></div>'
       ).join('');
       list.querySelectorAll('.rm').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1516,6 +2754,7 @@ void main() {
         });
       });
     }
+    lastAddedName = null;
     $('shufflePlayersBtn').disabled = pool.length < 2;
     $('clearPlayersBtn').disabled = pool.length === 0;
   }
@@ -1654,8 +2893,14 @@ void main() {
         const p1m = a.winner ? (a.winner === 1 ? a.p1m : a.p2m) : null;
         const p2 = b.winner ? (b.winner === 1 ? b.p1 : b.p2) : null;
         const p2m = b.winner ? (b.winner === 1 ? b.p1m : b.p2m) : null;
-        if (nm.p1 !== p1) { nm.p1 = p1; nm.p1m = p1m; nm.winner = null; }
-        if (nm.p2 !== p2) { nm.p2 = p2; nm.p2m = p2m; nm.winner = null; }
+        if (nm.p1 !== p1) {
+          if (captureAdvance && p1) advanceKeys.add(rowKey(activeSlot, 'upper', ri + 1, i, 1));
+          nm.p1 = p1; nm.p1m = p1m; nm.winner = null;
+        }
+        if (nm.p2 !== p2) {
+          if (captureAdvance && p2) advanceKeys.add(rowKey(activeSlot, 'upper', ri + 1, i, 2));
+          nm.p2 = p2; nm.p2m = p2m; nm.winner = null;
+        }
         const aWill = willProduceWinner(R, ri, i * 2);
         const bWill = willProduceWinner(R, ri, i * 2 + 1);
         if (nm.p1 && !nm.p2 && !bWill) nm.winner = 1;
@@ -1741,7 +2986,14 @@ void main() {
 
         const p1Changed = m.p1 !== n1;
         const p2Changed = m.p2 !== n2;
-        if (p1Changed || p2Changed) m.winner = null;
+        if (p1Changed) {
+          if (captureAdvance && n1) advanceKeys.add(rowKey(activeSlot, 'lower', li, j, 1));
+          m.winner = null;
+        }
+        if (p2Changed) {
+          if (captureAdvance && n2) advanceKeys.add(rowKey(activeSlot, 'lower', li, j, 2));
+          m.winner = null;
+        }
         m.p1 = n1; m.p1m = n1m;
         m.p2 = n2; m.p2m = n2m;
 
@@ -1759,7 +3011,14 @@ void main() {
     const lw = _upperWinner(LR[LR.length - 1][0]);
     const uwN = uw ? uw.name : null;
     const lwN = lw ? lw.name : null;
-    if (gf.p1 !== uwN || gf.p2 !== lwN) gf.winner = null;
+    if (gf.p1 !== uwN) {
+      if (captureAdvance && uwN) advanceKeys.add(rowKey(activeSlot, 'gf', 0, 0, 1));
+      gf.winner = null;
+    }
+    if (gf.p2 !== lwN) {
+      if (captureAdvance && lwN) advanceKeys.add(rowKey(activeSlot, 'gf', 0, 0, 2));
+      gf.winner = null;
+    }
     gf.p1 = uwN; gf.p1m = uw ? uw.members : null;
     gf.p2 = lwN; gf.p2m = lw ? lw.members : null;
   }
@@ -1812,9 +3071,12 @@ void main() {
     const name = $('tournName').value.trim() || 'CS2 Турнир';
     pushUndo('Создание турнира');
     tournament = createTournament(name, pool, $('shuffle').checked, currentFormat);
+    championCelebrated = null;
     propagate(); saveState(); updateHeader();
     animateEntrance = true; controlsCollapsed = true; applyControlsState();
+    pendingLineAnim = true;
     renderBracketView(); syncLowerToggleUI();
+    pulseView();
   }
   $('createBtn').addEventListener('click', startTournament);
   $('createBtnTop').addEventListener('click', startTournament);
@@ -1823,6 +3085,7 @@ void main() {
     if (!tournament) return;
     if (!confirm('Сбросить прогресс всех матчей? Результаты будут удалены (можно будет отменить через Undo).')) return;
     pushUndo('Сброс прогресса');
+    championCelebrated = null;
     tournament.rounds.forEach(r => r.forEach(m => { m.winner = null; }));
     if (tournament.lowerRounds) tournament.lowerRounds.forEach(r => r.forEach(m => { m.winner = null; }));
     if (tournament.grandFinal) tournament.grandFinal.winner = null;
@@ -1832,7 +3095,7 @@ void main() {
 
   $('newTournBtn').addEventListener('click', () => {
     if (!confirm('Начать новый турнир? Текущий прогресс будет удалён.')) return;
-    tournament = null; undoStack = [];
+    tournament = null; undoStack = []; championCelebrated = null;
     saveUndo(); saveState(); updateHeader(); renderBracketView();
     controlsCollapsed = false; applyControlsState();
     syncLowerToggleUI(); syncUndoBtn(); toast('Турнир удалён');
@@ -1851,16 +3114,43 @@ void main() {
     setTimeout(() => { drawBracketLines($('rounds')); if (tournament && tournament.mode === 'DE') drawBracketLines($('lowerBracket')); }, 120);
   });
 
-  function pickWinner(m, side) {
+  function pickWinner(m, side, roundType, ri, mi, slotOwner) {
     pushUndo('Выбор победителя');
     if (m.winner === side) m.winner = null; else m.winner = side;
-    propagate(); saveState(); renderBracket();
+    const owner = slotOwner === undefined ? activeSlot : slotOwner;
+    const focusKey = rowKey(owner, roundType, ri, mi, side);
+    lastPickedKey = m.winner ? focusKey : null;
+    captureAdvance = !!m.winner;
+    propagate();
+    captureAdvance = false;
+    saveState(); renderBracket();
+    const finalM = tournament.mode === 'DE' ? tournament.grandFinal : tournament.rounds[tournament.rounds.length - 1][0];
+    if (finalM === m && m.winner) celebrateChampion();
+    const focusEl = document.querySelector('.row[data-key="' + focusKey + '"]');
+    if (focusEl) {
+      try { focusEl.focus({ preventScroll: true }); } catch (e) {}
+    }
+    lastPickedKey = null;
+    advanceKeys.clear();
   }
 
+  // ============ REPLACE MODAL ============
   let replaceTarget = null;
+  let modalReturnKey = null;
+  function rememberModalFocus() {
+    const row = document.activeElement && document.activeElement.closest ? document.activeElement.closest('.row') : null;
+    if (row && row.dataset.key) modalReturnKey = row.dataset.key;
+  }
+  function restoreModalFocus() {
+    if (!modalReturnKey) return;
+    const el = document.querySelector('.row[data-key="' + modalReturnKey + '"]');
+    modalReturnKey = null;
+    if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+  }
   function showReplaceError(msg) { $('replaceError').textContent = msg || ''; }
   function openReplaceModal(team) {
     if (!team || !tournament) return;
+    rememberModalFocus();
     replaceTarget = { team, oldMembers: team.members.slice() };
     $('replaceTeamName').textContent = team.name;
     const container = $('replaceMembers'); container.innerHTML = '';
@@ -1868,7 +3158,7 @@ void main() {
     showReplaceError(''); $('replaceModal').hidden = false;
     setTimeout(() => { const first = container.querySelector('input'); if (first) { first.focus(); first.select(); } }, 50);
   }
-  function closeReplaceModal() { $('replaceModal').hidden = true; replaceTarget = null; showReplaceError(''); }
+  function closeReplaceModal() { $('replaceModal').hidden = true; replaceTarget = null; showReplaceError(''); restoreModalFocus(); }
   function confirmReplace() {
     if (!replaceTarget || !tournament) return;
     const { team, oldMembers } = replaceTarget;
@@ -1896,420 +3186,712 @@ void main() {
       if (m.p1m && arraysEqual(m.p1m, oldMembers)) { m.p1m = team.members; m.p1 = team.name; }
       if (m.p2m && arraysEqual(m.p2m, oldMembers)) { m.p2m = team.members; m.p2 = team.name; }
     }
-    saveState(); closeReplaceModal(); renderBracket(); toast('Игрок заменён');
+    saveState(); renderBracket(); closeReplaceModal(); toast('Игрок заменён');
   }
   $('replaceCancel').addEventListener('click', closeReplaceModal);
   $('replaceConfirm').addEventListener('click', confirmReplace);
   $('replaceMembers').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); confirmReplace(); } else if (e.key === 'Escape') closeReplaceModal(); });
   $('replaceModal').addEventListener('click', e => { if (e.target === $('replaceModal')) closeReplaceModal(); });
 
-  let _pmCtx = null;
-  function openPlayerMoveModal(playerName, fromTeam, specificPlayer) {
-    if (!tournament) return;
-    _pmCtx = { playerName: specificPlayer || playerName, fromTeam, selectedTeam: null };
-    $('pmPlayerName').textContent = _pmCtx.playerName; $('pmError').textContent = '';
-    const list = $('pmTeamList'); list.innerHTML = '';
-    tournament.teams.forEach(team => {
-      const isSame = team === fromTeam;
-      const isFull = team.members.length >= tournament.format;
-      const row = document.createElement('button');
-      row.type = 'button'; row.className = 'pm-team-row'; row.disabled = isSame || isFull;
-      const left = document.createElement('span'); left.textContent = teamDisplayName(team.members) || '(пустая)';
-      const right = document.createElement('span'); right.className = 'pm-count'; right.textContent = team.members.length + '/' + tournament.format;
-      row.appendChild(left); row.appendChild(right);
-      if (!row.disabled) row.addEventListener('click', () => {
-        list.querySelectorAll('.pm-team-row').forEach(b => b.classList.remove('selected'));
-        row.classList.add('selected'); _pmCtx.selectedTeam = team;
-      });
-      list.appendChild(row);
-    });
-    $('playerMoveModal').hidden = false;
+  // ============ PLAYER MOVE MODAL ============
+  let pmState = null;
+  let dragCtx = null;
+
+  function getMatchByRef(ref) {
+    if (!tournament) return null;
+    if (ref.roundType === 'upper') return tournament.rounds?.[ref.ri]?.[ref.mi] || null;
+    if (ref.roundType === 'lower') return tournament.lowerRounds?.[ref.ri]?.[ref.mi] || null;
+    if (ref.roundType === 'gf') return tournament.grandFinal || null;
+    return null;
   }
-  function closePlayerMoveModal() { $('playerMoveModal').hidden = true; _pmCtx = null; }
-  function confirmPlayerMove() {
-    if (!_pmCtx || !_pmCtx.selectedTeam) { $('pmError').textContent = 'Выберите команду назначения'; return; }
-    const { playerName, fromTeam, selectedTeam } = _pmCtx;
-    if (selectedTeam.members.length >= tournament.format) { $('pmError').textContent = 'В выбранной команде нет свободных мест'; return; }
-    const idx = fromTeam.members.indexOf(playerName);
-    if (idx === -1) { $('pmError').textContent = 'Игрок не найден в исходной команде'; return; }
-    pushUndo('Перемещение игрока');
-    const oldFromRef = fromTeam.members;
-    const oldToRef = selectedTeam.members;
-    const oldFromMembers = oldFromRef.slice();
-    const oldToMembers = oldToRef.slice();
-    const oldName = fromTeam.name;
+  function slotKey(ref) { return ref.roundType + ':' + ref.ri + ':' + ref.mi + ':' + ref.side; }
 
-    fromTeam.members.splice(idx, 1);
-    selectedTeam.members.push(playerName);
-    fromTeam.name = teamDisplayName(fromTeam.members);
-    selectedTeam.name = teamDisplayName(selectedTeam.members);
-
-    // Update every stored match slot for BOTH teams. Otherwise the roster in
-    // later rounds can keep showing the old lineup after a player is moved.
-    const updateTeamSnapshot = (holder, oldMembers, oldRef, newMembers, newName) => {
-      if (holder.p1m && (holder.p1m === oldRef || arraysEqual(holder.p1m, oldMembers))) {
-        holder.p1m = newMembers.length ? newMembers.slice() : null;
-        holder.p1 = newMembers.length ? newName : null;
-        if (!holder.p1) holder.winner = null;
-      }
-      if (holder.p2m && (holder.p2m === oldRef || arraysEqual(holder.p2m, oldMembers))) {
-        holder.p2m = newMembers.length ? newMembers.slice() : null;
-        holder.p2 = newMembers.length ? newName : null;
-        if (!holder.p2) holder.winner = null;
-      }
+  function openPlayerMoveModal(roundType, ri, mi, side) {
+    if (!tournament) return;
+    const m = getMatchByRef({ roundType, ri, mi });
+    if (!m) return;
+    const name = side === 1 ? m.p1 : m.p2;
+    if (!name) return;
+    rememberModalFocus();
+    pmState = { from: { roundType, ri, mi, side }, selected: null };
+    $('pmPlayerName').textContent = name;
+    $('pmError').textContent = '';
+    renderPmTeamList();
+    $('playerMoveModal').hidden = false;
+    requestAnimationFrame(() => {
+      if ($('playerMoveModal').hidden) return;
+      const first = $('pmTeamList').querySelector('.pm-team-row:not([disabled])') || $('pmCancel');
+      if (first) { try { first.focus(); } catch (e) {} }
+    });
+  }
+  function renderPmTeamList() {
+    if (!pmState) return;
+    const host = $('pmTeamList');
+    const refs = [];
+    const addSlots = (roundType, rounds, prefix) => {
+      rounds.forEach((round, ri) => {
+        round.forEach((m, mi) => {
+          if (m.p1) refs.push({ roundType, ri, mi, side: 1, name: m.p1, label: prefix + ' R' + (ri + 1) + ' M' + (mi + 1) + ' · top' });
+          if (m.p2) refs.push({ roundType, ri, mi, side: 2, name: m.p2, label: prefix + ' R' + (ri + 1) + ' M' + (mi + 1) + ' · bot' });
+        });
+      });
     };
-    const updateAllSnapshots = (oldMembers, oldRef, newMembers, newName) => {
-      tournament.rounds.forEach(r => r.forEach(m => updateTeamSnapshot(m, oldMembers, oldRef, newMembers, newName)));
-      if (tournament.lowerRounds) tournament.lowerRounds.forEach(r => r.forEach(m => updateTeamSnapshot(m, oldMembers, oldRef, newMembers, newName)));
-      if (tournament.grandFinal) updateTeamSnapshot(tournament.grandFinal, oldMembers, oldRef, newMembers, newName);
-    };
-    updateAllSnapshots(oldFromMembers, oldFromRef, fromTeam.members, fromTeam.name);
-    updateAllSnapshots(oldToMembers, oldToRef, selectedTeam.members, selectedTeam.name);
-
-    if (fromTeam.members.length === 0) {
-      const remove = confirm('Команда «' + (oldName || '—') + '» стала пустой. Удалить её из турнира?');
-      if (remove) tournament.teams = tournament.teams.filter(t => t !== fromTeam);
+    addSlots('upper', tournament.rounds, 'U');
+    if (tournament.mode === 'DE' && tournament.lowerRounds) addSlots('lower', tournament.lowerRounds, 'L');
+    if (tournament.grandFinal) {
+      const m = tournament.grandFinal;
+      if (m.p1) refs.push({ roundType: 'gf', ri: 0, mi: 0, side: 1, name: m.p1, label: 'GF · top' });
+      if (m.p2) refs.push({ roundType: 'gf', ri: 0, mi: 0, side: 2, name: m.p2, label: 'GF · bot' });
     }
-    propagate(); saveState(); closePlayerMoveModal(); renderBracket(); toast('Игрок перемещён');
+    const curKey = slotKey(pmState.from);
+    const selKey = pmState.selected ? slotKey(pmState.selected) : null;
+    let html = refs.map(r => {
+      const k = slotKey(r);
+      const isCur = k === curKey;
+      const isSel = k === selKey;
+      return '<button type="button" class="pm-team-row' + (isSel ? ' selected' : '') + '" data-ref="' + k + '"' + (isCur ? ' disabled' : '') + '>' +
+        '<span>' + esc(r.name) + '</span>' +
+        '<span class="pm-count">' + esc(r.label) + '</span>' +
+      '</button>';
+    }).join('');
+    if (!html) html = '<div class="pool-empty">Нет других позиций</div>';
+    host.innerHTML = html;
+    host.querySelectorAll('.pm-team-row').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parts = btn.dataset.ref.split(':');
+        pmState.selected = { roundType: parts[0], ri: +parts[1], mi: +parts[2], side: +parts[3] };
+        renderPmTeamList();
+      });
+    });
+  }
+  function closePlayerMoveModal() { $('playerMoveModal').hidden = true; pmState = null; $('pmError').textContent = ''; restoreModalFocus(); }
+  function confirmPlayerMove() {
+    if (!pmState || !pmState.selected) { $('pmError').textContent = 'Выберите позицию'; return; }
+    pushUndo('Перемещение игрока');
+    const from = getMatchByRef(pmState.from);
+    const to = getMatchByRef(pmState.selected);
+    if (!from || !to) { closePlayerMoveModal(); return; }
+    const fromName = pmState.from.side === 1 ? from.p1 : from.p2;
+    const fromMembers = pmState.from.side === 1 ? from.p1m : from.p2m;
+    const toName = pmState.selected.side === 1 ? to.p1 : to.p2;
+    const toMembers = pmState.selected.side === 1 ? to.p1m : to.p2m;
+    if (pmState.from.side === 1) { from.p1 = toName; from.p1m = toMembers; } else { from.p2 = toName; from.p2m = toMembers; }
+    if (pmState.selected.side === 1) { to.p1 = fromName; to.p1m = fromMembers; } else { to.p2 = fromName; to.p2m = fromMembers; }
+    from.winner = null; to.winner = null;
+    propagate(); saveState(); renderBracket(); closePlayerMoveModal(); toast('Игрок перемещён');
   }
   $('pmCancel').addEventListener('click', closePlayerMoveModal);
   $('pmConfirm').addEventListener('click', confirmPlayerMove);
   $('playerMoveModal').addEventListener('click', e => { if (e.target === $('playerMoveModal')) closePlayerMoveModal(); });
 
-  let _dragSrc = null;
-  let _isDragging = false; // Флаг для предотвращения случайного клика после Drag&Drop
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      const overlay = !$('playerMoveModal').hidden ? $('playerMoveModal') : (!$('replaceModal').hidden ? $('replaceModal') : null);
+      if (!overlay) return;
+      const items = Array.from(overlay.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      return;
+    }
+    if (e.key !== 'Escape') return;
+    if (!$('playerMoveModal').hidden) { e.preventDefault(); closePlayerMoveModal(); return; }
+    if (!$('replaceModal').hidden) { e.preventDefault(); closeReplaceModal(); }
+  });
 
-  function getMatchBySlot(slot) {
-    if (!tournament) return null;
-    if (slot.bracket === 'U') return tournament.rounds[slot.round]?.[slot.match];
-    if (slot.bracket === 'L') return tournament.lowerRounds?.[slot.round]?.[slot.match];
-    if (slot.bracket === 'G') return tournament.grandFinal;
-    return null;
-  }
-  function slotHasPlayed(slot) { const m = getMatchBySlot(slot); return !!(m && m.winner && m.p1 && m.p2); }
-
-  function attachDragHandlers(rowEl, slot) {
-    if (!rowEl) return;
-    rowEl.classList.add('draggable'); rowEl.draggable = true;
-    
-    rowEl.addEventListener('dragstart', e => {
-      const m = getMatchBySlot(slot);
-      const hasTeam = slot.side === 1 ? m?.p1 : m?.p2;
-      // Запрещаем тащить пустые слоты
-      if (!hasTeam) { e.preventDefault(); return; }
-      
-      _dragSrc = slot; 
-      _isDragging = true;
-      rowEl.classList.add('dragging');
-      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'team'); } catch (er) {}
+  // ============ DRAG & DROP ============
+  function setupRowDnD(el, roundType, ri, mi, side) {
+    el.draggable = true;
+    el.classList.add('draggable');
+    el.addEventListener('dragstart', (e) => {
+      const m = getMatchByRef({ roundType, ri, mi });
+      if (!m) return;
+      const name = side === 1 ? m.p1 : m.p2;
+      if (!name) { e.preventDefault(); return; }
+      dragCtx = { roundType, ri, mi, side };
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', name); } catch (err) {}
     });
-    
-    rowEl.addEventListener('dragend', () => { 
-      _dragSrc = null; 
-      // Небольшая задержка, чтобы клик после drop не сработал
-      setTimeout(() => { _isDragging = false; }, 150); 
-      document.querySelectorAll('.row.drop-ok, .row.drop-bad').forEach(el => el.classList.remove('drop-ok', 'drop-bad')); 
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      document.querySelectorAll('.row.drop-ok, .row.drop-bad').forEach(x => x.classList.remove('drop-ok', 'drop-bad'));
+      dragCtx = null;
     });
-    
-    rowEl.addEventListener('dragover', e => { 
-      if (!_dragSrc) return; 
-      // Разрешаем перемещение только внутри одного раунда, чтобы не ломать логику распространения
-      if (_dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) { 
-        try { e.dataTransfer.dropEffect = 'none'; } catch (er) {} 
-        return; 
-      } 
-      e.preventDefault(); 
-      try { e.dataTransfer.dropEffect = 'move'; } catch (er) {} 
+    el.addEventListener('dragover', (e) => {
+      if (!dragCtx) return;
+      if (dragCtx.roundType !== roundType || dragCtx.ri !== ri) return;
+      if (dragCtx.mi === mi && dragCtx.side === side) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.classList.add('drop-ok');
     });
-    
-    rowEl.addEventListener('dragenter', e => { 
-      if (!_dragSrc || _dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) return; 
-      const ok = !slotHasPlayed(slot) && !slotHasPlayed(_dragSrc); 
-      rowEl.classList.add(ok ? 'drop-ok' : 'drop-bad'); 
+    el.addEventListener('dragleave', () => { el.classList.remove('drop-ok', 'drop-bad'); });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('drop-ok', 'drop-bad');
+      if (!dragCtx) return;
+      if (dragCtx.roundType !== roundType || dragCtx.ri !== ri) { toast('Только в пределах одного раунда'); dragCtx = null; return; }
+      if (dragCtx.mi === mi && dragCtx.side === side) { dragCtx = null; return; }
+      const fromM = getMatchByRef(dragCtx);
+      const toM = getMatchByRef({ roundType, ri, mi });
+      if (!fromM || !toM) { dragCtx = null; return; }
+      pushUndo('Перестановка (drag&drop)');
+      const aSide = dragCtx.side, bSide = side;
+      const aName = aSide === 1 ? fromM.p1 : fromM.p2, aMembers = aSide === 1 ? fromM.p1m : fromM.p2m;
+      const bName = bSide === 1 ? toM.p1 : toM.p2, bMembers = bSide === 1 ? toM.p1m : toM.p2m;
+      if (aSide === 1) { fromM.p1 = bName; fromM.p1m = bMembers; } else { fromM.p2 = bName; fromM.p2m = bMembers; }
+      if (bSide === 1) { toM.p1 = aName; toM.p1m = aMembers; } else { toM.p2 = aName; toM.p2m = aMembers; }
+      fromM.winner = null; toM.winner = null;
+      dragCtx = null;
+      propagate(); saveState(); renderBracket();
     });
-    
-    rowEl.addEventListener('dragleave', () => { rowEl.classList.remove('drop-ok', 'drop-bad'); });
-    
-    rowEl.addEventListener('drop', e => { 
-      e.preventDefault(); 
-      rowEl.classList.remove('drop-ok', 'drop-bad'); 
-      if (!_dragSrc) return; 
-      if (_dragSrc.bracket !== slot.bracket || _dragSrc.round !== slot.round) return; 
-      swapTeamSlots(_dragSrc, slot); 
-      _dragSrc = null; 
-    });
-  }
-
-  function swapTeamSlots(a, b) {
-    if (!tournament) return;
-    if (a.bracket === b.bracket && a.round === b.round && a.match === b.match && a.side === b.side) return;
-    const playedA = slotHasPlayed(a); const playedB = slotHasPlayed(b);
-    if (playedA || playedB) { const ok = confirm('В одном из выбранных матчей уже есть результат.\nПеремещение может изменить прогресс турнира. Продолжить?'); if (!ok) return; }
-    pushUndo('Перемещение команды');
-    const mA = getMatchBySlot(a); const mB = getMatchBySlot(b);
-    if (!mA || !mB) return;
-    const key = s => s === 1 ? { n: 'p1', m: 'p1m' } : { n: 'p2', m: 'p2m' };
-    const kA = key(a.side), kB = key(b.side);
-    const tmpN = mA[kA.n], tmpM = mA[kA.m];
-    mA[kA.n] = mB[kB.n]; mA[kA.m] = mB[kB.m];
-    mB[kB.n] = tmpN; mB[kB.m] = tmpM;
-    mA.winner = null; mB.winner = null;
-    propagate(); saveState(); renderBracket(); toast('Команды перемещены');
   }
 
-  function roundName(round) { const n = round.length * 2; if (n === 2) return 'Финал'; if (n === 4) return '1/2 финала'; if (n === 8) return '1/4 финала'; return '1/' + (n / 2) + ' финала'; }
+  // ============ BRACKET RENDER ============
+  function roundTitleText(ri, total) {
+    const remaining = total - ri;
+    if (remaining === 1) return 'Финал';
+    if (remaining === 2) return 'Полуфинал';
+    if (remaining === 3) return '1/4 финала';
+    if (remaining === 4) return '1/8 финала';
+    return 'Раунд ' + (ri + 1);
+  }
 
-  function buildRow(m, side, ri, slot) {
-    const row = document.createElement('div'); row.className = 'row';
+  function buildRowEl(m, side, roundType, ri, mi, slotOwner) {
     const name = side === 1 ? m.p1 : m.p2;
     const members = side === 1 ? m.p1m : m.p2m;
-    const other = side === 1 ? m.p2 : m.p1;
-    const bothExist = m.p1 && m.p2;
-    if (!name) { if (slot && slot.bracket === 'U' && ri === 0 && other) row.classList.add('bye'); else row.classList.add('empty'); }
-    if (m.winner === side) row.classList.add('win');
-    const label = document.createElement('span'); label.className = 'name';
-    if (name) {
-      if (members && members.length >= 3) {
-        label.classList.add('multi');
-        members.forEach(mem => { const span = document.createElement('span'); span.className = 'member'; span.textContent = mem; label.appendChild(span); });
-        label.title = members.join(' · ');
-      } else { label.textContent = name; if (members && members.length > 1) label.title = members.join(' · '); }
-    } else if (slot && slot.bracket === 'U' && ri === 0 && other) { label.textContent = 'BYE'; }
-    else { label.textContent = '—'; }
-    row.appendChild(label);
-    if (name && members && tournament) {
-      const team = tournament.teams.find(t => arraysEqual(t.members, members));
-      if (team) {
-        const edit = document.createElement('button'); edit.className = 'edit-btn'; edit.type = 'button'; edit.textContent = '✎'; edit.title = 'Заменить игрока'; edit.setAttribute('aria-label', 'Заменить игрока');
-        edit.addEventListener('click', e => { e.stopPropagation(); openReplaceModal(team); });
-        row.appendChild(edit);
-        const move = document.createElement('button'); move.className = 'edit-btn'; move.type = 'button'; move.textContent = '⇄'; move.title = 'Переместить игрока'; move.setAttribute('aria-label', 'Переместить игрока');
-        move.addEventListener('click', e => {
-          e.stopPropagation();
-          if (members.length <= 1) { openPlayerMoveModal(members[0], team, members[0]); return; }
-          const choice = prompt('Кого переместить из команды "' + team.name + '"?\n' + members.map((m,i)=>`${i+1}. ${m}`).join('\n') + '\n\nВведите номер:', '1');
-          const idx = parseInt(choice, 10);
-          if (!idx || idx < 1 || idx > members.length) return;
-          openPlayerMoveModal(members[idx-1], team, members[idx-1]);
-        });
-        row.appendChild(move);
-      }
-    }
-    const arrow = document.createElement('span'); arrow.className = 'arrow';
-    arrow.textContent = m.winner === side ? '×' : '→';
-    row.appendChild(arrow);
-    if (name && bothExist) {
+    const row = document.createElement('div');
+    const isEmpty = !name;
+    const isWin = m.winner === side;
+    const oppName = side === 1 ? m.p2 : m.p1;
+    const isBye = !isEmpty && !oppName && isWin;
+    const ownerSlot = slotOwner === undefined ? activeSlot : slotOwner;
+    const key = rowKey(ownerSlot, roundType, ri, mi, side);
+    row.className = 'row' + (isEmpty ? ' empty' : '') + (isWin ? ' win' : '');
+    row.dataset.key = key;
+    if (isBye) row.classList.add('bye');
+    if (isWin && lastPickedKey === key) row.classList.add('just-won');
+    if (advanceKeys.has(key)) row.classList.add('row-in');
+
+    let nameHtml;
+    if (isEmpty) nameHtml = '<span class="name">—</span>';
+    else if (members && members.length > 1) nameHtml = '<span class="name multi">' + members.map(x => '<span class="member">' + esc(x) + '</span>').join('') + '</span>';
+    else nameHtml = '<span class="name">' + esc(name) + '</span>';
+
+    row.innerHTML = nameHtml + '<span class="arrow">→</span>' +
+      (isEmpty ? '' :
+        '<button class="edit-btn" type="button" title="Заменить игрока" data-act="replace">✎</button>' +
+        '<button class="edit-btn" type="button" title="Переместить игрока" data-act="move">⇄</button>');
+
+    if (!isEmpty) {
       row.classList.add('clickable');
-      row.title = m.winner === side ? 'Клик — отменить выбор' : 'Клик — пройдёт дальше';
-      row.addEventListener('click', () => {
-        // Защита от срабатывания клика сразу после Drag&Drop
-        if (_isDragging) return; 
-        pickWinner(m, side);
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.setAttribute('aria-pressed', isWin ? 'true' : 'false');
+      row.setAttribute('aria-label', name + (isWin ? ' — победитель' : ' — выбрать победителем'));
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.edit-btn')) return;
+        if (slotOwner !== undefined && slotOwner !== activeSlot) {
+          switchSlot(slotOwner);
+        }
+        const mm = getMatchByRef({ roundType, ri, mi });
+        if (!mm) return;
+        pickWinner(mm, side, roundType, ri, mi, ownerSlot);
       });
+      row.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target.closest('.edit-btn')) return;
+        e.preventDefault();
+        row.click();
+      });
+      row.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (slotOwner !== undefined && slotOwner !== activeSlot) {
+            switchSlot(slotOwner);
+          }
+          if (btn.dataset.act === 'replace') {
+            const team = tournament.teams.find(t => arraysEqual(t.members, members));
+            if (team) openReplaceModal(team);
+            else toast('Команда не найдена');
+          } else if (btn.dataset.act === 'move') {
+            openPlayerMoveModal(roundType, ri, mi, side);
+          }
+        });
+      });
+      setupRowDnD(row, roundType, ri, mi, side);
     }
-    if (slot) attachDragHandlers(row, slot);
     return row;
   }
 
-  function buildMatch(m, ri, delay, matchNumber, slotBase) {
-    const el = document.createElement('div'); el.className = 'match';
-    if (delay !== undefined) { el.classList.add('entering'); el.style.animationDelay = delay + 'ms'; }
-    const numLabel = document.createElement('span'); numLabel.className = 'match-label'; numLabel.textContent = 'M' + matchNumber;
-    el.appendChild(numLabel);
-    const row1 = buildRow(m, 1, ri, slotBase ? { ...slotBase, side: 1 } : null);
-    const row2 = buildRow(m, 2, ri, slotBase ? { ...slotBase, side: 2 } : null);
-    el.appendChild(row1); el.appendChild(row2);
-    el.addEventListener('mousemove', e => {
-      const rect = el.getBoundingClientRect();
-      el.style.setProperty('--spotlight-x', ((e.clientX - rect.left) / rect.width) * 100 + '%');
-      el.style.setProperty('--spotlight-y', ((e.clientY - rect.top) / rect.height) * 100 + '%');
-    });
-    el.addEventListener('mouseleave', () => { el.style.setProperty('--spotlight-x', '50%'); el.style.setProperty('--spotlight-y', '50%'); });
+  function buildMatchEl(m, roundType, ri, mi, slotOwner) {
+    const el = document.createElement('div');
+    el.className = 'match';
+    if (animateEntrance) {
+      el.classList.add('entering');
+      el.style.animationDelay = (Math.random() * 0.15) + 's';
+    }
+    el.dataset.ri = ri;
+    el.dataset.mi = mi;
+    el.innerHTML = '<div class="match-label">' + (roundType === 'upper' ? 'U' : roundType === 'lower' ? 'L' : 'GF') + (ri + 1) + '.' + (mi + 1) + '</div>';
+    el.appendChild(buildRowEl(m, 1, roundType, ri, mi, slotOwner));
+    el.appendChild(buildRowEl(m, 2, roundType, ri, mi, slotOwner));
     return el;
   }
 
-  function drawBracketLines(container) {
+  function drawBracketLines(container, animate) {
     if (!container) return;
-    const svg = container.querySelector(':scope > .lines');
-    if (!svg) return;
-    const baseRect = container.getBoundingClientRect();
-    const w = Math.max(container.scrollWidth, 1);
-    const h = Math.max(container.scrollHeight, 1);
-    svg.setAttribute('width', w); svg.setAttribute('height', h);
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.style.width = w + 'px'; svg.style.height = h + 'px';
-    const roundEls = Array.from(container.children).filter(el =>
-      el.classList.contains('round') && !el.classList.contains('champ-col')
-    );
-    const matches = roundEls.map(rEl => Array.from(rEl.querySelectorAll(':scope > .round-body > .match')));
-    let html = '';
-    for (let ri = 0; ri < matches.length - 1; ri++) {
-      const cur = matches[ri]; const nxt = matches[ri + 1];
-      for (let i = 0; i < nxt.length; i++) {
-        const a = cur[i * 2], b = cur[i * 2 + 1], c = nxt[i];
-        if (!c) continue;
-        const cR = c.getBoundingClientRect();
-        const cX = cR.left - baseRect.left; const cY = cR.top - baseRect.top + cR.height / 2;
-        if (a && b) {
-          const aR = a.getBoundingClientRect(); const bR = b.getBoundingClientRect();
-          const aX = aR.right - baseRect.left; const aY = aR.top - baseRect.top + aR.height / 2;
-          const bX = bR.right - baseRect.left; const bY = bR.top - baseRect.top + bR.height / 2;
-          const midX = (aX + cX) / 2;
-          html += `<path d="M ${aX} ${aY} H ${midX} V ${cY} H ${cX}"/>`;
-          html += `<path d="M ${bX} ${bY} H ${midX} V ${cY}"/>`;
-        } else if (a && !b) {
-          const aR = a.getBoundingClientRect();
-          const aX = aR.right - baseRect.left; const aY = aR.top - baseRect.top + aR.height / 2;
-          const midX = (aX + cX) / 2;
-          html += `<path d="M ${aX} ${aY} H ${midX} V ${cY} H ${cX}" style="stroke: rgba(255,214,102,0.35);"/>`;
+    const oldSvg = container.querySelector('.lines');
+    if (oldSvg) oldSvg.remove();
+    const cRect = container.getBoundingClientRect();
+    if (!cRect.width || !cRect.height) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'lines');
+    svg.setAttribute('viewBox', '0 0 ' + cRect.width + ' ' + cRect.height);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.width = cRect.width + 'px';
+    svg.style.height = cRect.height + 'px';
+
+    const isLower = container.classList.contains('lower-bracket');
+    const rounds = Array.from(container.querySelectorAll(':scope > .round'));
+
+    for (let ri = 0; ri < rounds.length - 1; ri++) {
+      const cur = rounds[ri];
+      const next = rounds[ri + 1];
+      const curMatches = Array.from(cur.querySelectorAll('.match'));
+      const nextMatches = Array.from(next.querySelectorAll('.match'));
+      if (!curMatches.length) continue;
+
+      if (next.classList.contains('champ-col')) {
+        const lastM = curMatches[0];
+        const champCard = next.querySelector('.champion');
+        if (lastM && champCard) {
+          const fromRect = lastM.getBoundingClientRect();
+          const toRect = champCard.getBoundingClientRect();
+          const x1 = fromRect.right - cRect.left;
+          const y1 = fromRect.top + fromRect.height * 0.5 - cRect.top;
+          const x2 = toRect.left - cRect.left;
+          const y2 = toRect.top + toRect.height * 0.5 - cRect.top;
+          const midX = (x1 + x2) / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2);
+          svg.appendChild(path);
+        }
+        continue;
+      }
+
+      if (!nextMatches.length) continue;
+
+      if (next.classList.contains('gf-col')) {
+        const lastM = curMatches[curMatches.length - 1];
+        const gfM = nextMatches[0];
+        if (lastM && gfM) {
+          const fromRect = lastM.getBoundingClientRect();
+          const toRect = gfM.getBoundingClientRect();
+          const x1 = fromRect.right - cRect.left;
+          const y1 = fromRect.top + fromRect.height * 0.5 - cRect.top;
+          const x2 = toRect.left - cRect.left;
+          const y2 = toRect.top + toRect.height * 0.25 - cRect.top;
+          const midX = (x1 + x2) / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2);
+          svg.appendChild(path);
+        }
+        continue;
+      }
+
+      const isOneToOne = isLower && (ri % 2 === 0);
+
+      if (isOneToOne) {
+        for (let i = 0; i < Math.min(curMatches.length, nextMatches.length); i++) {
+          const fm = curMatches[i];
+          const to = nextMatches[i];
+          if (!fm || !to) continue;
+          const fr = fm.getBoundingClientRect();
+          const toRect = to.getBoundingClientRect();
+          const x1 = fr.right - cRect.left;
+          const y1 = fr.top + fr.height * 0.5 - cRect.top;
+          const x2 = toRect.left - cRect.left;
+          const y2 = toRect.top + toRect.height * 0.25 - cRect.top;
+          const midX = (x1 + x2) / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2);
+          svg.appendChild(path);
+        }
+      } else {
+        for (let i = 0; i < nextMatches.length; i++) {
+          const from1 = curMatches[i * 2];
+          const from2 = curMatches[i * 2 + 1];
+          const to = nextMatches[i];
+          if (!to) continue;
+          const toRect = to.getBoundingClientRect();
+          const x2 = toRect.left - cRect.left;
+          const y2a = toRect.top + toRect.height * 0.25 - cRect.top;
+          const y2b = toRect.top + toRect.height * 0.75 - cRect.top;
+          [from1, from2].forEach((fm, k) => {
+            if (!fm) return;
+            const fr = fm.getBoundingClientRect();
+            const x1 = fr.right - cRect.left;
+            const y1 = fr.top + fr.height * 0.5 - cRect.top;
+            const y2 = k === 0 ? y2a : y2b;
+            const midX = (x1 + x2) / 2;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2);
+            svg.appendChild(path);
+          });
         }
       }
     }
-    svg.innerHTML = html;
+    if (animate) {
+      svg.classList.add('draw-in');
+      svg.querySelectorAll('path').forEach(path => path.setAttribute('pathLength', '100'));
+    }
+    container.appendChild(svg);
   }
 
-  function renderLowerBracket() {
-    const wrapper = $('lowerBracketWrapper'); const lb = $('lowerBracket');
-    if (!wrapper || !lb) return;
-    const showLB = !!(tournament && tournament.mode === 'DE' && tournament.lowerRounds && tournament.lowerRounds.length > 0);
-    wrapper.hidden = !showLB;
-    lb.innerHTML = '';
-    if (!showLB) return;
-    lb.innerHTML = '<svg class="lines lower-lines"></svg>';
-    tournament.lowerRounds.forEach((round, li) => {
-      const roundEl = document.createElement('div'); roundEl.className = 'round';
-      const title = document.createElement('div'); title.className = 'round-title';
-      title.innerHTML = 'LB R' + (li + 1) + ' <span class="count">' + round.length + '</span>';
-      roundEl.appendChild(title);
-      const body = document.createElement('div'); body.className = 'round-body';
-      round.forEach((m, mi) => { body.appendChild(buildMatch(m, -1, undefined, mi + 1, { bracket: 'L', round: li, match: mi })); });
-      roundEl.appendChild(body); lb.appendChild(roundEl);
+  function drawAllLines() {
+    const animate = pendingLineAnim;
+    pendingLineAnim = false;
+    requestAnimationFrame(() => {
+      const r1 = $('rounds');
+      const lb1 = $('lowerBracket');
+      if (r1 && !r1.closest('[hidden]')) drawBracketLines(r1, animate);
+      if (lb1 && !lb1.closest('[hidden]')) drawBracketLines(lb1, animate);
+
+      if (isSplitView) {
+        for (let i = 0; i < 2; i++) {
+          const sr = $('splitRounds_' + i);
+          const sl = $('splitLower_' + i);
+          if (sr && !sr.closest('[hidden]')) drawBracketLines(sr, animate);
+          if (sl && !sl.closest('[hidden]')) drawBracketLines(sl, animate);
+        }
+      }
     });
   }
 
-  function renderBracketView() {
-    if (!tournament) {
-      $('emptyState').hidden = false; $('bracketView').hidden = true;
-      syncLowerToggleUI(); syncUndoBtn(); return;
-    }
-    $('emptyState').hidden = true; $('bracketView').hidden = false;
-    $('bracketTitle').textContent = tournament.name;
-    const fmt = tournament.format || 1;
-    const teamsCount = tournament.teams ? tournament.teams.length : tournament.players.length;
-    const countLabel = fmt === 1 ? 'игроков' : 'команд';
-    const modeLabel = tournament.mode === 'DE' ? 'Double Elimination' : 'Single Elimination';
-    $('bracketMeta').textContent = teamsCount + ' ' + countLabel + ' · ' + fmt + '×' + fmt + ' · ' + modeLabel;
-    renderBracket(); syncLowerToggleUI(); syncUndoBtn();
+  function scheduleLineRedraw(animate) {
+    setTimeout(() => {
+      const hosts = [$('rounds'), $('lowerBracket')];
+      if (isSplitView) hosts.push($('splitRounds_0'), $('splitRounds_1'), $('splitLower_0'), $('splitLower_1'));
+      const missing = hosts.some(h => h && !h.closest('[hidden]') && h.querySelectorAll('.match').length && !h.querySelector('.lines path'));
+      if (missing || !animate) { drawAllLines(); return; }
+      // Second pass once the draw-in animation is over — keeps lines pixel-aligned after layout/animations settle.
+      setTimeout(drawAllLines, 850);
+    }, 90);
   }
 
   function renderBracket() {
+    if (isSplitView) {
+      renderSplitView();
+      return;
+    }
     if (!tournament) return;
+    const host = $('rounds');
+    host.innerHTML = '';
     const R = tournament.rounds;
-    const bracket = $('rounds');
-    bracket.innerHTML = '<svg class="lines" id="lines"></svg>';
-    const animate = animateEntrance;
-    let matchCounter = 1;
+    const totalRounds = R.length;
 
     R.forEach((round, ri) => {
-      const roundEl = document.createElement('div'); roundEl.className = 'round';
-      const title = document.createElement('div'); title.className = 'round-title';
-      title.innerHTML = roundName(round) + ' <span class="count">' + round.length + '</span>';
-      roundEl.appendChild(title);
-      const body = document.createElement('div'); body.className = 'round-body';
-      round.forEach((m, mi) => {
-        const delay = animate ? matchCounter * 30 : undefined;
-        body.appendChild(buildMatch(m, ri, delay, matchCounter, { bracket: 'U', round: ri, match: mi }));
-        matchCounter++;
-      });
-      roundEl.appendChild(body); bracket.appendChild(roundEl);
+      const col = document.createElement('div');
+      col.className = 'round';
+      col.innerHTML = '<div class="round-title">' + roundTitleText(ri, totalRounds) + ' <span class="count">' + round.length + '</span></div>' +
+                      '<div class="round-body"></div>';
+      const body = col.querySelector('.round-body');
+      round.forEach((m, mi) => { body.appendChild(buildMatchEl(m, 'upper', ri, mi)); });
+      host.appendChild(col);
     });
 
     if (tournament.mode === 'DE' && tournament.grandFinal) {
       const gfCol = document.createElement('div');
       gfCol.className = 'round gf-col';
-      const gfTitle = document.createElement('div');
-      gfTitle.className = 'round-title';
-      gfTitle.innerHTML = 'GRAND FINAL';
-      gfCol.appendChild(gfTitle);
-      const gfBody = document.createElement('div');
-      gfBody.className = 'round-body';
-      gfBody.appendChild(buildMatch(tournament.grandFinal, -1, undefined, 1, {
-        bracket: 'G', round: 0, match: 0
-      }));
-      gfCol.appendChild(gfBody);
-      bracket.appendChild(gfCol);
+      gfCol.innerHTML = '<div class="round-title">GRAND FINAL</div><div class="round-body"></div>';
+      const body = gfCol.querySelector('.round-body');
+      body.appendChild(buildMatchEl(tournament.grandFinal, 'gf', 0, 0));
+      host.appendChild(gfCol);
     }
 
-    const champCol = document.createElement('div'); champCol.className = 'round champ-col';
-    const champTitle = document.createElement('div'); champTitle.className = 'round-title'; champTitle.textContent = 'Чемпион';
-    champCol.appendChild(champTitle);
-    const champBody = document.createElement('div'); champBody.className = 'round-body';
-    const champM = (tournament.mode === 'DE' && tournament.grandFinal) ? tournament.grandFinal : R[R.length - 1][0];
-    const champ = document.createElement('div'); champ.className = 'champion' + (champM.winner ? ' has-champ' : '');
-    const label = document.createElement('div'); label.className = 'label'; label.textContent = 'Победитель';
-    const name = document.createElement('div'); name.className = 'name';
-    if (champM.winner) {
-      const w = champM.winner === 1 ? champM.p1 : champM.p2;
-      const wm = champM.winner === 1 ? champM.p1m : champM.p2m;
-      if (wm && wm.length >= 3) { name.classList.add('multi'); wm.forEach(mem => { const s = document.createElement('span'); s.className = 'member'; s.textContent = mem; name.appendChild(s); }); }
-      else name.textContent = w;
-    } else name.textContent = '—';
-    champ.appendChild(label); champ.appendChild(name); champBody.appendChild(champ);
-    champCol.appendChild(champBody); bracket.appendChild(champCol);
-    renderLowerBracket();
-    requestAnimationFrame(() => {
-      drawBracketLines(bracket);
-      if (tournament.mode === 'DE') { const lb = $('lowerBracket'); if (lb) drawBracketLines(lb); }
-    });
-    if (animate) animateEntrance = false;
+    const champCol = document.createElement('div');
+    champCol.className = 'round champ-col';
+    const finalMatch = tournament.mode === 'DE' ? tournament.grandFinal : R[R.length - 1][0];
+    const champName = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1 : finalMatch.p2) : null;
+    const champMembers = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1m : finalMatch.p2m) : null;
+    let champInner;
+    if (champName) {
+      if (champMembers && champMembers.length > 1) {
+        champInner = '<div class="name multi">' + champMembers.map(x => '<span class="member">' + esc(x) + '</span>').join('') + '</div>';
+      } else {
+        champInner = '<div class="name">' + esc(champName) + '</div>';
+      }
+    } else {
+      champInner = '<div class="name">—</div>';
+    }
+    champCol.innerHTML = '<div class="round-title">CHAMPION</div><div class="round-body" style="justify-content:center;">' +
+      '<div class="champion' + (champName ? ' has-champ' : '') + '">' +
+        '<div class="label">Победитель</div>' + champInner +
+      '</div></div>';
+    host.appendChild(champCol);
+
+    const wrapper = $('lowerBracketWrapper');
+    const lowerHost = $('lowerBracket');
+    if (tournament.mode === 'DE' && tournament.lowerRounds && tournament.lowerRounds.length) {
+      wrapper.hidden = false;
+      lowerHost.innerHTML = '';
+      tournament.lowerRounds.forEach((round, ri) => {
+        const col = document.createElement('div');
+        col.className = 'round';
+        col.innerHTML = '<div class="round-title">Lower ' + (ri + 1) + ' <span class="count">' + round.length + '</span></div><div class="round-body"></div>';
+        const body = col.querySelector('.round-body');
+        round.forEach((m, mi) => { body.appendChild(buildMatchEl(m, 'lower', ri, mi)); });
+        lowerHost.appendChild(col);
+      });
+    } else {
+      wrapper.hidden = true;
+    }
+
+    animateEntrance = false;
+    updateTournProgress(tournament);
+    const animateLines = pendingLineAnim;
+    drawAllLines();
+    scheduleLineRedraw(animateLines);
   }
 
-  let resizeRaf = 0;
-  window.addEventListener('resize', () => {
-    if (resizeRaf) cancelAnimationFrame(resizeRaf);
-    resizeRaf = requestAnimationFrame(() => {
-      if (!tournament) return;
-      drawBracketLines($('rounds'));
-      if (tournament.mode === 'DE') drawBracketLines($('lowerBracket'));
+  function renderBracketInto(t, host, wrapper, lowerHost, slotIdx) {
+    if (!t || !host) return;
+    host.innerHTML = '';
+    const R = t.rounds;
+    const totalRounds = R.length;
+
+    R.forEach((round, ri) => {
+      const col = document.createElement('div');
+      col.className = 'round';
+      col.innerHTML = '<div class="round-title">' + roundTitleText(ri, totalRounds) + ' <span class="count">' + round.length + '</span></div>' +
+                      '<div class="round-body"></div>';
+      const body = col.querySelector('.round-body');
+      round.forEach((m, mi) => { body.appendChild(buildMatchEl(m, 'upper', ri, mi, slotIdx)); });
+      host.appendChild(col);
     });
+
+    if (t.mode === 'DE' && t.grandFinal) {
+      const gfCol = document.createElement('div');
+      gfCol.className = 'round gf-col';
+      gfCol.innerHTML = '<div class="round-title">GRAND FINAL</div><div class="round-body"></div>';
+      const body = gfCol.querySelector('.round-body');
+      body.appendChild(buildMatchEl(t.grandFinal, 'gf', 0, 0, slotIdx));
+      host.appendChild(gfCol);
+    }
+
+    const champCol = document.createElement('div');
+    champCol.className = 'round champ-col';
+    const finalMatch = t.mode === 'DE' ? t.grandFinal : R[R.length - 1][0];
+    const champName = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1 : finalMatch.p2) : null;
+    const champMembers = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1m : finalMatch.p2m) : null;
+    let champInner;
+    if (champName) {
+      if (champMembers && champMembers.length > 1) {
+        champInner = '<div class="name multi">' + champMembers.map(x => '<span class="member">' + esc(x) + '</span>').join('') + '</div>';
+      } else {
+        champInner = '<div class="name">' + esc(champName) + '</div>';
+      }
+    } else {
+      champInner = '<div class="name">—</div>';
+    }
+    champCol.innerHTML = '<div class="round-title">CHAMPION</div><div class="round-body" style="justify-content:center;">' +
+      '<div class="champion' + (champName ? ' has-champ' : '') + '">' +
+        '<div class="label">Победитель</div>' + champInner +
+      '</div></div>';
+    host.appendChild(champCol);
+
+    if (t.mode === 'DE' && t.lowerRounds && t.lowerRounds.length && wrapper && lowerHost) {
+      wrapper.hidden = false;
+      lowerHost.innerHTML = '';
+      t.lowerRounds.forEach((round, ri) => {
+        const col = document.createElement('div');
+        col.className = 'round';
+        col.innerHTML = '<div class="round-title">Lower ' + (ri + 1) + ' <span class="count">' + round.length + '</span></div><div class="round-body"></div>';
+        const body = col.querySelector('.round-body');
+        round.forEach((m, mi) => { body.appendChild(buildMatchEl(m, 'lower', ri, mi, slotIdx)); });
+        lowerHost.appendChild(col);
+      });
+    } else if (wrapper) {
+      wrapper.hidden = true;
+    }
+  }
+
+  function renderSplitView() {
+    const splitWrap = $('splitBracketWrap');
+    if (!splitWrap) return;
+    updateTournProgress(null);
+    splitWrap.innerHTML = '';
+
+    for (let slotIdx = 0; slotIdx < 2; slotIdx++) {
+      const s = slots[slotIdx];
+      const t = (slotIdx === activeSlot) ? tournament : s.tournament;
+      const card = document.createElement('div');
+      card.className = 'split-bracket-card' + (slotIdx === activeSlot ? ' active-split' : '');
+      const tName = (slotIdx === activeSlot && $('tournName')) ? $('tournName').value : (s.tournName || ('CS2 Турнир ' + (slotIdx + 1)));
+
+      const finalMatch = t ? (t.mode === 'DE' ? t.grandFinal : t.rounds[t.rounds.length - 1][0]) : null;
+      const champ = finalMatch?.winner ? (finalMatch.winner === 1 ? finalMatch.p1 : finalMatch.p2) : null;
+
+      let actionsHtml = '';
+      if (slotIdx !== activeSlot) {
+        actionsHtml = '<button class="btn-sm split-switch-btn" data-slot="' + slotIdx + '">Выбрать активным</button>';
+      }
+
+      card.innerHTML =
+        '<div class="split-card-header">' +
+          '<div class="split-card-title">' +
+            '<span class="tab-num">' + (slotIdx + 1) + '</span>' +
+            '<span>' + esc(tName) + '</span>' +
+            (champ ? '<span class="tab-badge-status done">Победитель: ' + esc(champ) + '</span>' : (t ? '<span class="tab-badge-status live">В игре</span>' : '<span class="tab-badge-status">Не начат</span>')) +
+          '</div>' +
+          '<div class="split-card-actions">' + actionsHtml + '</div>' +
+        '</div>' +
+        '<div class="bracket-scroll">' +
+          '<div class="bracket split-bracket-rounds" id="splitRounds_' + slotIdx + '"></div>' +
+          '<div class="lower-bracket-wrapper" id="splitLowerWrapper_' + slotIdx + '" hidden>' +
+            '<div class="bracket-divider"><span>LOWER BRACKET · DOUBLE ELIMINATION</span></div>' +
+            '<div class="bracket lower-bracket" id="splitLower_' + slotIdx + '"></div>' +
+            '<div class="lower-bracket-hint">Победитель нижней сетки → Grand Final</div>' +
+          '</div>' +
+        '</div>';
+
+      splitWrap.appendChild(card);
+
+      if (t) {
+        renderBracketInto(t, $('splitRounds_' + slotIdx), $('splitLowerWrapper_' + slotIdx), $('splitLower_' + slotIdx), slotIdx);
+      } else {
+        $('splitRounds_' + slotIdx).innerHTML = '<div style="padding:40px;color:var(--fg-muted);text-align:center;">Сетка для Турнира ' + (slotIdx + 1) + ' пока не создана.<br><button class="btn-sm split-switch-btn" data-slot="' + slotIdx + '" style="margin-top:12px;">Переключиться и создать</button></div>';
+      }
+    }
+
+    splitWrap.querySelectorAll('.split-switch-btn').forEach(b => {
+      b.onclick = () => switchSlot(+b.dataset.slot);
+    });
+
+    const animateLines = pendingLineAnim;
+    drawAllLines();
+    scheduleLineRedraw(animateLines);
+  }
+
+  function renderBracketView() {
+    const singleLayout = $('singleTournamentLayout');
+    const splitWrap = $('splitBracketWrap');
+    const emptyState = $('emptyState');
+    const bracketView = $('bracketView');
+
+    if (isSplitView) {
+      if (emptyState) emptyState.hidden = true;
+      if (bracketView) bracketView.hidden = false;
+      if (singleLayout) singleLayout.hidden = true;
+      if (splitWrap) splitWrap.hidden = false;
+      $('bracketTitle').textContent = 'Двойная сетка (Турнир 1 и Турнир 2)';
+      $('bracketMeta').textContent = 'Режим одновременного просмотра обеих сеток';
+      renderSplitView();
+      return;
+    }
+
+    if (splitWrap) splitWrap.hidden = true;
+    if (singleLayout) singleLayout.hidden = false;
+
+    if (!tournament) {
+      bracketView.hidden = true;
+      emptyState.hidden = false;
+      updateTournProgress(null);
+      pendingLineAnim = false;
+      syncUndoBtn();
+      return;
+    }
+    bracketView.hidden = false;
+    emptyState.hidden = true;
+    $('bracketTitle').textContent = tournament.name;
+    $('bracketMeta').textContent = tournament.format + '×' + tournament.format + ' · ' + tournament.teams.length + ' команд · ' + (tournament.mode === 'DE' ? 'Double Elimination' : 'Single Elimination');
+    syncLowerToggleUI();
+    renderBracket();
+    syncUndoBtn();
+  }
+
+  // ============ EVENT BINDINGS (misc) ============
+  $('undoBtn').addEventListener('click', performUndo);
+  $('toggleBtn').addEventListener('click', () => {
+    controlsCollapsed = !controlsCollapsed;
+    applyControlsState(); saveState();
   });
 
-  $('toggleBtn').addEventListener('click', () => { controlsCollapsed = !controlsCollapsed; applyControlsState(); saveState(); });
+  // Dual tournament tabs
+  $('tournTab0')?.addEventListener('click', () => switchSlot(0));
+  $('tournTab1')?.addEventListener('click', () => switchSlot(1));
+  $('copyPoolBtn')?.addEventListener('click', copyPoolToOtherSlot);
+  $('splitViewBtn')?.addEventListener('click', toggleSplitView);
+
   $$('.fmt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const nextFormat = +btn.dataset.fmt;
-      if (nextFormat === currentFormat) return;
-      const previousFormat = currentFormat;
-      currentFormat = nextFormat;
-      const options = maxOptionsForFormat(currentFormat);
-      if (!options.includes(maxPlayers)) {
-        const needed = Math.max(pool.length, currentFormat * 2);
-        const nextMax = options.find(value => value >= needed) || options[options.length - 1];
-        if (pool.length > nextMax) {
-          const ok = confirm('Для формата ' + currentFormat + '×' + currentFormat + ' доступный лимит — ' + nextMax + '. Оставить только первых ' + nextMax + ' игроков?');
-          if (!ok) { currentFormat = previousFormat; return; }
-          pool = pool.slice(0, nextMax);
+      const f = +btn.dataset.fmt;
+      if (f === currentFormat) return;
+      maxByFormat[currentFormat] = maxPlayers;
+      currentFormat = f;
+      applyFormatUI();
+      renderMaxOptions();
+      const opts = maxOptionsForFormat(currentFormat);
+      const minSize = Math.max(pool.length, currentFormat * 2);
+      const preferred = maxByFormat[currentFormat];
+      const base = preferred === undefined ? maxPlayers : preferred;
+      const candidates = opts.filter(o => o >= minSize);
+      let fitted = candidates.length
+        ? candidates.reduce((best, o) => Math.abs(o - base) < Math.abs(best - base) ? o : best, candidates[0])
+        : opts[opts.length - 1];
+      maxPlayers = fitted;
+      if (pool.length > maxPlayers) {
+        if (confirm('Пул содержит ' + pool.length + ' игроков, новый лимит ' + maxPlayers + '. Оставить первых ' + maxPlayers + '?')) {
+          pool = pool.slice(0, maxPlayers);
+        } else {
+          maxPlayers = nextPow2(Math.ceil(pool.length / currentFormat)) * currentFormat;
+          renderMaxOptions();
         }
-        maxPlayers = nextMax;
       }
-      applyFormatUI(); renderMaxOptions(); applyMaxUI();
+      applyMaxUI();
       saveState(); updateHeader(); renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
     });
   });
-  $('tournName').addEventListener('input', saveState);
-  $('undoBtn').addEventListener('click', performUndo);
 
-  loadState(); loadUndo();
-  // Подгоняем сохранённый лимит под выбранный формат, не удаляя игроков автоматически.
-  const validMaxOptions = maxOptionsForFormat(currentFormat);
-  if (!validMaxOptions.includes(maxPlayers)) {
-    const needed = Math.max(pool.length, currentFormat * 2);
-    maxPlayers = validMaxOptions.find(value => value >= needed) || validMaxOptions[validMaxOptions.length - 1];
+  $('tournName').addEventListener('input', () => {
+    const val = $('tournName').value.trim() || ('CS2 Турнир ' + (activeSlot + 1));
+    slots[activeSlot].tournName = val;
+    if (tournament) {
+      tournament.name = val;
+      $('bracketTitle').textContent = tournament.name;
+      $('hdrTourn').textContent = tournament.name;
+    }
+    saveState();
+    updateTabUI();
+  });
+
+  let __resizeT;
+  window.addEventListener('resize', () => {
+    clearTimeout(__resizeT);
+    __resizeT = setTimeout(drawAllLines, 100);
+  });
+
+  function init() {
+    loadState();
+    loadUndo();
+    normalizeMaxPlayers();
+    applyFormatUI();
+    renderMaxOptions();
+    applyMaxUI();
+    applyControlsState();
+    updateHeader();
+    renderPlayersSection();
+    renderTournamentSection();
+    renderTwitchSection();
+    renderBracketView();
+    syncUndoBtn();
+    syncLowerToggleUI();
+    updateTabUI();
   }
-  applyControlsState(); applyFormatUI(); renderMaxOptions(); applyMaxUI();
-  renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
-  updateHeader(); renderBracketView();
-  syncLowerToggleUI(); syncUndoBtn();
+  init();
 })();
 </script>
 </body>
