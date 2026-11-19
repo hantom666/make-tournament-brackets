@@ -934,7 +934,7 @@
     </div>
     <div>
       <label class="lbl">Максимум участников</label>
-      <div class="max-row">
+      <div class="max-row" id="maxPlayersOptions">
         <button class="seg-btn max-btn" data-max="8">8</button>
         <button class="seg-btn max-btn" data-max="16">16</button>
         <button class="seg-btn max-btn active" data-max="32">32</button>
@@ -1423,6 +1423,43 @@ void main() {
     btn.querySelector('span').textContent = controlsCollapsed ? 'Настройки' : 'Скрыть';
   }
   function applyFormatUI() { $$('.fmt-btn').forEach(b => b.classList.toggle('active', +b.dataset.fmt === currentFormat)); }
+  function maxOptionsForFormat(format) {
+    // Для каждого формата доступны лимиты на 2/4/8/16/32 полные команды.
+    // Поэтому число игроков всегда кратно размеру команды, а сетка строится
+    // на 2/4/8/16/32 командах без неполных составов.
+    const options = [2, 4, 8, 16, 32].map(teamCount => teamCount * format);
+
+    // Не теряем уже добавленных игроков при смене формата или загрузке старого сохранения.
+    // Если пул больше стандартного максимума, добавляем следующий лимит,
+    // вмещающий полное число команд и сохраняющий степень двойки для сетки.
+    if (pool.length > options[options.length - 1]) {
+      const neededTeams = Math.ceil(pool.length / format);
+      const extraLimit = nextPow2(neededTeams) * format;
+      if (!options.includes(extraLimit)) options.push(extraLimit);
+    }
+    return options;
+  }
+  function renderMaxOptions() {
+    const host = $('maxPlayersOptions');
+    if (!host) return;
+    const options = maxOptionsForFormat(currentFormat);
+    host.innerHTML = options.map(value =>
+      '<button class="seg-btn max-btn' + (value === maxPlayers ? ' active' : '') + '" data-max="' + value + '">' + value + '</button>'
+    ).join('');
+    host.querySelectorAll('.max-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newMax = +btn.dataset.max;
+        if (newMax === maxPlayers) return;
+        if (pool.length > newMax) {
+          if (!confirm('Пул содержит ' + pool.length + ' игроков. Оставить только первых ' + newMax + '?')) return;
+          pool = pool.slice(0, newMax);
+        }
+        maxPlayers = newMax;
+        saveState(); applyMaxUI();
+        updateHeader(); renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
+      });
+    });
+  }
   function applyMaxUI() { $$('.max-btn').forEach(b => b.classList.toggle('active', +b.dataset.max === maxPlayers)); }
   function isPoolFull() { return pool.length >= maxPlayers; }
   function animateNumber(el, from, to) { if (from === to) return; el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 450); }
@@ -2238,21 +2275,38 @@ void main() {
   });
 
   $('toggleBtn').addEventListener('click', () => { controlsCollapsed = !controlsCollapsed; applyControlsState(); saveState(); });
-  $$('.fmt-btn').forEach(btn => { btn.addEventListener('click', () => { currentFormat = +btn.dataset.fmt; applyFormatUI(); saveState(); renderTournamentSection(); updateHeader(); }); });
-  $$('.max-btn').forEach(btn => {
+  $$('.fmt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const newMax = +btn.dataset.max;
-      if (newMax === maxPlayers) return;
-      if (pool.length > newMax) { if (!confirm('Пул содержит ' + pool.length + ' игроков. Оставить только первых ' + newMax + '?')) return; pool = pool.slice(0, newMax); }
-      maxPlayers = newMax; saveState(); applyMaxUI();
-      updateHeader(); renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
+      const nextFormat = +btn.dataset.fmt;
+      if (nextFormat === currentFormat) return;
+      const previousFormat = currentFormat;
+      currentFormat = nextFormat;
+      const options = maxOptionsForFormat(currentFormat);
+      if (!options.includes(maxPlayers)) {
+        const needed = Math.max(pool.length, currentFormat * 2);
+        const nextMax = options.find(value => value >= needed) || options[options.length - 1];
+        if (pool.length > nextMax) {
+          const ok = confirm('Для формата ' + currentFormat + '×' + currentFormat + ' доступный лимит — ' + nextMax + '. Оставить только первых ' + nextMax + ' игроков?');
+          if (!ok) { currentFormat = previousFormat; return; }
+          pool = pool.slice(0, nextMax);
+        }
+        maxPlayers = nextMax;
+      }
+      applyFormatUI(); renderMaxOptions(); applyMaxUI();
+      saveState(); updateHeader(); renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
     });
   });
   $('tournName').addEventListener('input', saveState);
   $('undoBtn').addEventListener('click', performUndo);
 
   loadState(); loadUndo();
-  applyControlsState(); applyFormatUI(); applyMaxUI();
+  // Подгоняем сохранённый лимит под выбранный формат, не удаляя игроков автоматически.
+  const validMaxOptions = maxOptionsForFormat(currentFormat);
+  if (!validMaxOptions.includes(maxPlayers)) {
+    const needed = Math.max(pool.length, currentFormat * 2);
+    maxPlayers = validMaxOptions.find(value => value >= needed) || validMaxOptions[validMaxOptions.length - 1];
+  }
+  applyControlsState(); applyFormatUI(); renderMaxOptions(); applyMaxUI();
   renderPlayersSection(); renderTournamentSection(); renderTwitchSection();
   updateHeader(); renderBracketView();
   syncLowerToggleUI(); syncUndoBtn();
